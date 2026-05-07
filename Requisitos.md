@@ -6,9 +6,7 @@ Requisitos
 
    1.2. Definição de Data e Hora: O sistema deve permitir selecionar uma data e hora válidas, garantindo que não existem sobreposições de jogos no mesmo estádio.
 
-   1.3. Associação de Equipas: O sistema deve permitir selecionar as duas seleções (Equipa A vs Equipa B) para um jogo.
-
-   1.4. Listagem de Calendário: O sistema deve gerar uma visualização de todos os jogos planeados, ordenados cronologicamente.
+   1.3. Listagem de Calendário: O sistema deve gerar uma visualização de todos os jogos planeados, ordenados cronologicamente.
 
 2. Gestão de Arbitragem
 
