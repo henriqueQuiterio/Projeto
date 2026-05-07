@@ -30,9 +30,9 @@ Requisitos
 
 6. Registar Eventos de um Jogo: O sistema deve permitir registar os eventos detalhados de cada partida (Marcadores e Assistentes, Jogadores que levaram cartão e Substituições)
 
-7. Registo de Estatísticas de Jogo: O sistema deve permitir registar as estatísticas de cada partida (posse de bola, remates à baliza, cantos, faltas, cartões).
+7. Registo de Estatísticas de Jogo: O sistema deve permitir registar as estatísticas de cada partida (posse de bola em percentagem, nº de remates à baliza, nº de cantos, nº de faltas, nº de cartões).
 
-8. Ficha de Pré-Jogo: O sistema deve permitir registar o onze inicial e capitão e consultar árbitro principal, estádio e horário para esse determinado jogo.
+8. Ficha de Pré-Jogo: O sistema deve permitir registar os onzes iniciais e capitães além de permitir consultar árbitro principal, estádio e horário para esse determinado jogo.
 
 9. Classificação: O sistema deve atualizar as tabelas classificativas de cada grupo (A a H), consoante o resultado de cada jogo para cada seleção (Vitória, Empate, Derrota, Golos Marcados, Golos Sofridos e Pontos).
 
