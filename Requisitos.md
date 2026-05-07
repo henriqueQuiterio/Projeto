@@ -52,3 +52,16 @@ Requisitos
 
 17. Preferência de Fuso Horário: O sistema deve permitir selecionar o fuso horário para cada jogo.
 
+Modelo de Dominio
+
+Entidade          Atributos Principais
+
+Seleção           Nome, País, Ranking, Grupo, Centro de Treino   
+Jogador           Nome, Número, Posição, Seleção   
+Jogo              Data, Hora, Fuso Horário, Estádio, Fase (Grupo/Eliminatória)   
+Estádio           Nome, Cidade, Capacidade
+Árbitro           Nome, Nacionalidade, Função (VAR, Principal, etc.)   
+Evento            Tipo (Golo, Cartão, Subst.), Minuto, Jogador Envolvido
+Estatística       Posse de bola, Remates, Cantos, Faltas
+Bilhete           Preço, Lugar, Estado (Vendido/Disponível)
+
