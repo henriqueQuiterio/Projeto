@@ -1,0 +1,11 @@
+Modelo de Dominio      
+
+Seleção             
+Jogador           
+Jogo              
+Estádio
+Estadia
+Árbitro            
+Evento            
+Estatística      
+Bilhete    
