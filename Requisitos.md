@@ -28,7 +28,7 @@ Requisitos
 
 6. Registar Eventos de um Jogo: O sistema deve permitir registar os eventos detalhados de cada partida (Marcadores e Assistentes, Jogadores que levaram cartão e Substituições)
 
-7. Registo de Estatísticas de Jogo: O sistema deve permitir registar as estatísticas de cada partida (posse de bola em percentagem, nº de remates à baliza, nº de cantos, nº de faltas, nº de cartões).
+7. Registo de Estatísticas de Jogo: O sistema deve permitir registar as estatísticas de cada partida por equipa (posse de bola em percentagem, nº de remates à baliza, nº de cantos, nº de faltas, nº de cartões).
 
 8. Ficha de Pré-Jogo: O sistema deve permitir registar os onzes iniciais e capitães além de permitir consultar árbitro principal, estádio e horário para esse determinado jogo.
 
@@ -52,15 +52,5 @@ Requisitos
 
 17. Preferência de Fuso Horário: O sistema deve permitir selecionar o fuso horário para cada jogo.
 
-Modelo de Dominio      
-
-Seleção             
-Jogador           
-Jogo              
-Estádio
-Estadia
-Árbitro            
-Evento            
-Estatística      
-Bilhete           
+       
 
