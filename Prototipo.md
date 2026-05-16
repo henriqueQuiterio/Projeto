@@ -334,10 +334,6 @@ Colunas: Pos, Seleção, J (Jogos), V, E, D, GM (Golos Marcados), GS, DG (Difere
 
 
 
-Destaque Visual: As duas primeiras linhas de cada grupo devem ter um fundo verde suave, indicando a qualificação para os oitavos-de-final.
-
-
-
 Vista de Fase Final: Quando o utilizador clica em "Fase Final", a tabela é substituída pela representação visual das eliminatórias (Dessaseiavos, Oitavos, Quartos, Meias e Final).
 
 
@@ -346,11 +342,11 @@ Vista de Fase Final: Quando o utilizador clica em "Fase Final", a tabela é subs
 
 
 
-Melhores Marcadores: Lista com o nome do jogador, foto/bandeira e número de golos.
+Melhores Marcadores: Lista com o nome do jogador e número de golos.
 
 
 
-Líderes de Assistências: Ranking dos jogadores com mais passes para golo.
+Líderes de Assistências: Ranking dos jogadores com mais assistências para golo.
 
 
 
