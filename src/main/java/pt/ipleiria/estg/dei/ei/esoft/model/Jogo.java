@@ -60,4 +60,5 @@ public class Jogo {
     public void setConcluido(boolean concluido) { this.concluido = concluido; }
     public List<Arbitro> getEquipaArbitragem() { return equipaArbitragem; }
     public void setEquipaArbitragem(List<Arbitro> equipa) { this.equipaArbitragem = equipa; }
+
 }

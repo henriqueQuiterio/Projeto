@@ -69,4 +69,47 @@ public class MundialController {
         }
         return filtrados;
     }
+
+    public List<Arbitro> getArbitrosDisponiveisParaData(Jogo jogoAtual) {
+        List<Arbitro> arbitrosDisponiveis = new ArrayList<>(getArbitrosDisponiveis());
+
+        if (jogoAtual == null || jogoAtual.getData() == null) {
+            return arbitrosDisponiveis;
+        }
+
+        try {
+            java.time.format.DateTimeFormatter formatter = new java.time.format.DateTimeFormatterBuilder()
+                    .parseCaseInsensitive()
+                    .appendPattern("EEEE d MMMM yyyy")
+                    .toFormatter(new java.util.Locale("pt", "PT"));
+
+            java.time.LocalDate dataJogoAtual = java.time.LocalDate.parse(jogoAtual.getData(), formatter);
+
+            for (Jogo outroJogo : getCalendarioJogos()) {
+                // CORREÇÃO CRUCIAL: Se for o PRÓPRIO jogo que estamos a editar/consultar,
+                // ignoramos a validação para que os árbitros já escalados continuem disponíveis nos combos!
+                if (outroJogo.equals(jogoAtual)) {
+                    continue;
+                }
+
+                if (outroJogo.getEquipaArbitragem() == null || outroJogo.getEquipaArbitragem().isEmpty()) {
+                    continue;
+                }
+
+                java.time.LocalDate dataOutroJogo = java.time.LocalDate.parse(outroJogo.getData(), formatter);
+                long diferencaDias = Math.abs(java.time.temporal.ChronoUnit.DAYS.between(dataJogoAtual, dataOutroJogo));
+
+                // Regra das 72 horas (menos de 3 dias de intervalo em OUTROS jogos)
+                if (diferencaDias < 3) {
+                    for (Arbitro arbitroOcupado : outroJogo.getEquipaArbitragem()) {
+                        arbitrosDisponiveis.remove(arbitroOcupado);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            System.out.println("Erro ao validar intervalo de 72h: " + e.getMessage());
+        }
+
+        return arbitrosDisponiveis;
+    }
 }
