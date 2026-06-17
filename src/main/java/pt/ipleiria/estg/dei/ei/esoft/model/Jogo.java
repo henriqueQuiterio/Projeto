@@ -1,9 +1,12 @@
 package pt.ipleiria.estg.dei.ei.esoft.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Jogo {
+public class Jogo implements Serializable {
+    private static final long serialVersionUID = 1L;
+
     private String data;
     private String hora;
     private String fusoHorario;

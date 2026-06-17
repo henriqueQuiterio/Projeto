@@ -5,6 +5,7 @@ import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.io.*;
 
 public class MundialController {
     private List<Jogo> calendarioJogos;
@@ -111,5 +112,46 @@ public class MundialController {
         }
 
         return arbitrosDisponiveis;
+    }
+
+    public void guardarDados() {
+        // ATENÇÃO: Substitui 'this.jogos' e 'this.arbitros' pelos nomes reais das tuas variáveis privadas do topo da classe!
+        System.out.println("A tentar gravar dados... Jogos em memória: " + (this.calendarioJogos != null ? this.calendarioJogos.size() : 0));
+
+        try (ObjectOutputStream oos = new ObjectOutputStream(new FileOutputStream("dados_mundial.dat"))) {
+            oos.writeObject(this.calendarioJogos);
+            oos.writeObject(this.arbitrosDisponiveis);
+            System.out.println("Ficheiro dados_mundial.dat guardado fisicamente com sucesso!");
+        } catch (IOException e) {
+            System.out.println("ERRO CRÍTICO AO GRAVAR FICHEIRO: " + e.getMessage());
+            e.printStackTrace();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    public void carregarDados() {
+        File ficheiro = new File("dados_mundial.dat");
+        if (!ficheiro.exists()) return;
+
+        try (ObjectInputStream ois = new ObjectInputStream(new FileInputStream(ficheiro))) {
+            List<Jogo> jogosCarregados = (List<Jogo>) ois.readObject();
+            List<Arbitro> arbitrosCarregados = (List<Arbitro>) ois.readObject();
+
+            if (jogosCarregados != null && !jogosCarregados.isEmpty()) {
+                // FORÇAR A SUBSTITUIÇÃO DIRETA NA VARIÁVEL DA CLASSE
+                this.calendarioJogos.clear();
+                this.calendarioJogos.addAll(jogosCarregados);
+                System.out.println("✓ SUCESSO: " + this.calendarioJogos.size() + " jogos restaurados na variável privada!");
+            }
+
+            if (arbitrosCarregados != null && !arbitrosCarregados.isEmpty()) {
+                this.arbitrosDisponiveis.clear();
+                this.arbitrosDisponiveis.addAll(arbitrosCarregados);
+            }
+
+        } catch (Exception e) {
+            System.out.println("Erro na leitura física: " + e.getMessage());
+            e.printStackTrace();
+        }
     }
 }
