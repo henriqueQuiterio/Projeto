@@ -5,12 +5,7 @@ import pt.ipleiria.estg.dei.ei.esoft.model.Arbitro;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JanelaMundial extends JFrame {
     // --- COMPONENTES DA ÁRVORE DO .FORM (Mapeamento exato para evitar erros de Binding) ---
@@ -38,6 +33,23 @@ public class JanelaMundial extends JFrame {
     private JComboBox<Arbitro> comboVar;
     private JButton btnConfirmarEquipa;
     private JLabel lblStatusValidacao;
+    private JPanel abaSelecoes;
+    private JSplitPane splitPrincipal;
+    private JPanel pnlEsquerdo;
+    private JTextField txtPesquisa;
+    private JList lstSelecoes;
+    private JPanel pnlInfoSelecao;
+    private JLabel lblRanking;
+    private JLabel lblParticipacoes;
+    private JLabel lblGrupo;
+    private JSplitPane splitDireita;
+    private JPanel pnlCentro;
+    private JTextField txtCentroTreino;
+    private JTextField txtHotel;
+    private JButton btnGuardarAlteracoes;
+    private JPanel pnlDireita;
+    private JButton btnAdicionarJogador;
+    private JTable tblJogadores;
 
     private MundialController controller;
     private boolean acabouDeAlocarComSucesso = false;
@@ -60,11 +72,13 @@ public class JanelaMundial extends JFrame {
         // 1. Instanciar os teus painéis limpos
         PainelCalendario abaCalendarioLimpa = new PainelCalendario(controller);
         PainelGestaoArbitragem abaArbitragemLimpa = new PainelGestaoArbitragem(controller, abaCalendarioLimpa);
+        PainelEquipas abaEquipasLimpa = new PainelEquipas(controller);
 
         // 2. Acoplar ao TabbedPane do ecrã
         abasPrincipais.removeAll(); // Limpa as abas em branco padrão do editor gráfico
         abasPrincipais.addTab("Consultar Calendário", abaCalendarioLimpa);
         abasPrincipais.addTab("Gestão de Arbitragem", abaArbitragemLimpa);
+        abasPrincipais.addTab("Equipas", abaEquipasLimpa);
 
         // Listener controlado de fecho
         addWindowListener(new java.awt.event.WindowAdapter() {
