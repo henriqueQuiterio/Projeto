@@ -3,6 +3,8 @@ package pt.ipleiria.estg.dei.ei.esoft.view;
 import pt.ipleiria.estg.dei.ei.esoft.control.MundialController;
 import pt.ipleiria.estg.dei.ei.esoft.model.Arbitro;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
+import pt.ipleiria.estg.dei.ei.esoft.model.Jogador;
+import pt.ipleiria.estg.dei.ei.esoft.model.Selecao;
 
 import javax.swing.*;
 import java.awt.*;
@@ -33,6 +35,23 @@ public class JanelaMundial extends JFrame {
     private JComboBox<Arbitro> comboVar;
     private JButton btnConfirmarEquipa;
     private JLabel lblStatusValidacao;
+    private JPanel abaSelecoes;
+    private JSplitPane splitPrincipal;
+    private JPanel pnlEsquerdo;
+    private JTextField txtPesquisa;
+    private JList lstSelecoes;
+    private JPanel pnlInfoSelecao;
+    private JLabel lblRanking;
+    private JLabel lblParticipacoes;
+    private JLabel lblGrupo;
+    private JSplitPane splitDireita;
+    private JPanel pnlCentro;
+    private JTextField txtCentroTreino;
+    private JTextField txtHotel;
+    private JButton btnGuardarAlteracoes;
+    private JPanel pnlDireita;
+    private JButton btnAdicionarJogador;
+    private JTable tblJogadores;
 
     private JPanel abaResultados;
     private JPanel painelResultados;
@@ -79,11 +98,18 @@ public class JanelaMundial extends JFrame {
         // 1. Instanciar os teus painéis limpos
         PainelCalendario abaCalendarioLimpa = new PainelCalendario(controller);
         PainelGestaoArbitragem abaArbitragemLimpa = new PainelGestaoArbitragem(controller, abaCalendarioLimpa);
+        PainelEquipas abaEquipasLimpa = new PainelEquipas(controller);
+        PainelResultados abaResultadosLogica = new PainelResultados(controller,
+                listaJogosResultados, txtGolosA, txtGolosB, txtPosseA, txtPosseB,
+                txtRematesA, txtRematesB, txtCantosA, txtCantosB, txtFaltasA, txtFaltasB,
+                cbMOTM, btnSubmeter, btnEditar, btnCancelarAlteracoes, tabelaEventos);
 
         // 2. Acoplar ao TabbedPane do ecrã
         abasPrincipais.removeAll(); // Limpa as abas em branco padrão do editor gráfico
         abasPrincipais.addTab("Consultar Calendário", abaCalendarioLimpa);
         abasPrincipais.addTab("Gestão de Arbitragem", abaArbitragemLimpa);
+        abasPrincipais.addTab("Equipas", abaEquipasLimpa);
+        abasPrincipais.addTab("Resultados", abaResultados);
 
         // Listener controlado de fecho
         addWindowListener(new java.awt.event.WindowAdapter() {
@@ -422,4 +448,5 @@ public class JanelaMundial extends JFrame {
         controller.adicionarArbitro(new Arbitro("Bram Van Driessche", "Belga", "VAR"));
         controller.adicionarArbitro(new Arbitro("Armando Villarreal", "Americana", "VAR"));
     }
+
 }
