@@ -19,8 +19,12 @@ public class PainelGestaoArbitragem extends JPanel {
     private JComboBox<Arbitro> comboPrincipal, comboAssistente1, comboAssistente2, comboVar;
     private JButton btnConfirmarEquipa;
     private JLabel lblStatusValidacao;
+
+    // Subtítulo dinâmico do jogo selecionado
+    private JLabel lblNomeacaoJogo;
+
     private javax.swing.event.ListSelectionListener listenerJogos;
-    private PainelCalendario painelCalendarioRef; // Referência para atualizar a outra aba ao gravar!
+    private PainelCalendario painelCalendarioRef;
 
     public PainelGestaoArbitragem(MundialController controller, PainelCalendario painelCalendarioRef) {
         this.controller = controller;
@@ -28,7 +32,9 @@ public class PainelGestaoArbitragem extends JPanel {
 
         setLayout(new BorderLayout(15, 15));
 
-        // Painel Esquerdo (Lista de Jogos)
+        // =====================================================================
+        // 1. PAINEL ESQUERDO (Lista de Jogos)
+        // =====================================================================
         JPanel painelEsquerdo = new JPanel(new BorderLayout(5, 5));
         painelEsquerdo.setPreferredSize(new Dimension(350, 0));
         chkSemArbitros = new JCheckBox("Sem Árbitros Atribuídos");
@@ -38,21 +44,50 @@ public class PainelGestaoArbitragem extends JPanel {
         painelEsquerdo.add(chkSemArbitros, BorderLayout.NORTH);
         painelEsquerdo.add(new JScrollPane(listaJogosAlocacao), BorderLayout.CENTER);
 
-        // Painel Direito (Formulário)
-        JPanel painelFormulario = new JPanel(new GridLayout(11, 1, 5, 5));
-        painelFormulario.setBorder(new EmptyBorder(20, 20, 20, 20));
+        // =====================================================================
+        // 2. PAINEL DIREITO EM COLUNA TOTAL (Fiel ao Protótipo)
+        // =====================================================================
+        JPanel painelDireitoConteudo = new JPanel();
+        painelDireitoConteudo.setLayout(new BoxLayout(painelDireitoConteudo, BoxLayout.Y_AXIS));
+        painelDireitoConteudo.setBorder(new EmptyBorder(25, 25, 25, 25));
 
+        // 2.1 Cabeçalho Superior
+        JLabel lblTituloSuperior = new JLabel("Nomeação da Equipa Técnica");
+        lblTituloSuperior.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTituloSuperior.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        lblNomeacaoJogo = new JLabel("Selecione um jogo na lista lateral para iniciar.");
+        lblNomeacaoJogo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lblNomeacaoJogo.setForeground(new Color(120, 120, 120));
+        lblNomeacaoJogo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        painelDireitoConteudo.add(lblTituloSuperior);
+        painelDireitoConteudo.add(Box.createVerticalStrut(4));
+        painelDireitoConteudo.add(lblNomeacaoJogo);
+        painelDireitoConteudo.add(Box.createVerticalStrut(20));
+
+        // 2.2 Inicialização dos componentes do formulário
         comboPrincipal = new JComboBox<>();
         comboAssistente1 = new JComboBox<>();
         comboAssistente2 = new JComboBox<>();
         comboVar = new JComboBox<>();
         btnConfirmarEquipa = new JButton("CONFIRMAR EQUIPA");
-        lblStatusValidacao = new JLabel("<html>🏆 Selecione um jogo na lista lateral para iniciar.</html>");
+        lblStatusValidacao = new JLabel("<html><font color='gray'>Aguardando seleção de jogo...</font></html>");
+
+        // Alinhamentos estritos à esquerda
+        comboPrincipal.setAlignmentX(Component.LEFT_ALIGNMENT);
+        comboAssistente1.setAlignmentX(Component.LEFT_ALIGNMENT);
+        comboAssistente2.setAlignmentX(Component.LEFT_ALIGNMENT);
+        comboVar.setAlignmentX(Component.LEFT_ALIGNMENT);
+        btnConfirmarEquipa.setAlignmentX(Component.LEFT_ALIGNMENT);
+        lblStatusValidacao.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         btnConfirmarEquipa.setBackground(new Color(25, 118, 210));
         btnConfirmarEquipa.setForeground(Color.WHITE);
         btnConfirmarEquipa.setFont(new Font("Segoe UI", Font.BOLD, 13));
+        btnConfirmarEquipa.setMaximumSize(new Dimension(450, 40)); // Acompanha a largura das caixas
 
+        // Configuração do Renderizador dos Árbitros nas caixas
         ListCellRenderer<Object> arbitroRenderer = new DefaultListCellRenderer() {
             @Override
             public Component getListCellRendererComponent(JList<?> list, Object value, int index, boolean isSelected, boolean cellHasFocus) {
@@ -64,28 +99,40 @@ public class PainelGestaoArbitragem extends JPanel {
                 return this;
             }
         };
-
         comboPrincipal.setRenderer(arbitroRenderer);
         comboAssistente1.setRenderer(arbitroRenderer);
         comboAssistente2.setRenderer(arbitroRenderer);
         comboVar.setRenderer(arbitroRenderer);
 
-        painelFormulario.add(new JLabel("Árbitro Principal")); painelFormulario.add(comboPrincipal);
-        painelFormulario.add(new JLabel("Árbitro Assistente 1")); painelFormulario.add(comboAssistente1);
-        painelFormulario.add(new JLabel("Árbitro Assistente 2")); painelFormulario.add(comboAssistente2);
-        painelFormulario.add(new JLabel("Quarto Árbitro / VAR")); painelFormulario.add(comboVar);
-        painelFormulario.add(new JLabel("")); painelFormulario.add(btnConfirmarEquipa);
-        painelFormulario.add(lblStatusValidacao);
+        // 2.3 Empilhar os pares utilizando o método auxiliar
+        addCampoFormulario(painelDireitoConteudo, "Árbitro Principal", comboPrincipal);
+        addCampoFormulario(painelDireitoConteudo, "Árbitro Assistente 1", comboAssistente1);
+        addCampoFormulario(painelDireitoConteudo, "Árbitro Assistente 2", comboAssistente2);
+        addCampoFormulario(painelDireitoConteudo, "Quarto Árbitro / VAR", comboVar);
 
+        painelDireitoConteudo.add(Box.createVerticalStrut(15));
+        painelDireitoConteudo.add(btnConfirmarEquipa);
+        painelDireitoConteudo.add(Box.createVerticalStrut(15));
+        painelDireitoConteudo.add(lblStatusValidacao);
+
+        // 🌟 ALTERAÇÃO AQUI: Removemos o limite de 500px para o painel ocupar a largura toda da janela
+        painelDireitoConteudo.setMaximumSize(new Dimension(Integer.MAX_VALUE, Integer.MAX_VALUE));
+
+        // =====================================================================
+        // 3. MONTAGEM FINAL DA ABA (Direto no CENTER para esticar)
+        // =====================================================================
         add(painelEsquerdo, BorderLayout.WEST);
-        add(painelFormulario, BorderLayout.CENTER);
+        add(painelDireitoConteudo, BorderLayout.CENTER); // Adiciona diretamente o conteúdo expandido!
 
+        // Registo de Listeners e Ações
         chkSemArbitros.addActionListener(e -> atualizarListaJogosGestaoArbitragem());
         this.listenerJogos = e -> { if (!e.getValueIsAdjusting()) preencherFormularioJogoSelecionado(); };
         listaJogosAlocacao.addListSelectionListener(this.listenerJogos);
         btnConfirmarEquipa.addActionListener(e -> submeterEquipaArbitragem());
 
+        // Carga inicial
         atualizarListaJogosGestaoArbitragem();
+        btnConfirmarEquipa.setEnabled(false);
     }
 
     private void carregarArbitrosNosCombos(Jogo jogo) {
@@ -126,7 +173,17 @@ public class PainelGestaoArbitragem extends JPanel {
 
     private void preencherFormularioJogoSelecionado() {
         Jogo jogo = listaJogosAlocacao.getSelectedValue();
-        if (jogo == null) return;
+        if (jogo == null) {
+            lblNomeacaoJogo.setText("Selecione um jogo na lista lateral para iniciar.");
+            lblStatusValidacao.setText("<html><font color='gray'>Aguardando seleção de jogo...</font></html>");
+            btnConfirmarEquipa.setEnabled(false);
+            carregarArbitrosNosCombos(null);
+            return;
+        }
+
+        // Atualiza o cabeçalho dinâmico com o formato do protótipo
+        lblNomeacaoJogo.setText(jogo.getSelecaoA() + " vs " + jogo.getSelecaoB() + "   ·   " + JogoAlocacaoListRenderer.obterDataFormatada(jogo.getData()));
+        btnConfirmarEquipa.setEnabled(true);
 
         carregarArbitrosNosCombos(jogo);
 
@@ -176,6 +233,8 @@ public class PainelGestaoArbitragem extends JPanel {
                 atualizarListaJogosGestaoArbitragem();
                 comboPrincipal.setSelectedIndex(-1); comboAssistente1.setSelectedIndex(-1); comboAssistente2.setSelectedIndex(-1); comboVar.setSelectedIndex(-1);
                 lblStatusValidacao.setText("<html><font color='#2e7d32'><b>✓ Sucesso:</b> Equipa alocada!</font></html>");
+                lblNomeacaoJogo.setText("Selecione um jogo na lista lateral para iniciar.");
+                btnConfirmarEquipa.setEnabled(false);
                 listaJogosAlocacao.addListSelectionListener(this.listenerJogos);
             } else {
                 listaJogosAlocacao.repaint();
@@ -192,19 +251,73 @@ public class PainelGestaoArbitragem extends JPanel {
     private static class JogoAlocacaoListRenderer extends JPanel implements ListCellRenderer<Jogo> {
         private JLabel lblInfo, lblVisto;
         public JogoAlocacaoListRenderer() {
-            setLayout(new BorderLayout(5, 5)); setBorder(new EmptyBorder(8, 12, 8, 12)); setBackground(Color.WHITE);
-            lblInfo = new JLabel(); lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-            lblVisto = new JLabel("✓"); lblVisto.setFont(new Font("Segoe UI", Font.BOLD, 16)); lblVisto.setForeground(new Color(46, 125, 50));
-            add(lblInfo, BorderLayout.CENTER); add(lblVisto, BorderLayout.EAST);
+            setLayout(new BorderLayout(5, 5));
+            setBorder(new EmptyBorder(8, 12, 8, 12));
+            setBackground(Color.WHITE);
+
+            lblInfo = new JLabel();
+            lblInfo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+
+            // 🌟 ALTERAÇÃO AQUI: Usar o código Unicode estável do visto
+            lblVisto = new JLabel("✓");
+            lblVisto.setFont(new Font("Segoe UI", Font.BOLD, 16));
+            lblVisto.setForeground(new Color(46, 125, 50)); // Verde escuro elegante
+
+            add(lblInfo, BorderLayout.CENTER);
+            add(lblVisto, BorderLayout.EAST);
         }
+
+        public static String obterDataFormatada(String dataOriginal) {
+            String dataNumerica = dataOriginal;
+            if (dataOriginal != null && dataOriginal.contains(" ")) {
+                String[] partes = dataOriginal.split(" ");
+                if (partes.length >= 4) {
+                    String dia = partes[1];
+                    String mesTexto = partes[2].toLowerCase();
+                    String ano = partes[3];
+                    String mesNum = "01";
+                    if (mesTexto.startsWith("jan")) mesNum = "01";
+                    else if (mesTexto.startsWith("fev")) mesNum = "02";
+                    else if (mesTexto.startsWith("mar")) mesNum = "03";
+                    else if (mesTexto.startsWith("abr")) mesNum = "04";
+                    else if (mesTexto.startsWith("mai")) mesNum = "05";
+                    else if (mesTexto.startsWith("jun")) mesNum = "06";
+                    else if (mesTexto.startsWith("jul")) mesNum = "07";
+                    else if (mesTexto.startsWith("ago")) mesNum = "08";
+                    else if (mesTexto.startsWith("set")) mesNum = "09";
+                    else if (mesTexto.startsWith("out")) mesNum = "10";
+                    else if (mesTexto.startsWith("nov")) mesNum = "11";
+                    else if (mesTexto.startsWith("dez")) mesNum = "12";
+                    if (dia.length() == 1) dia = "0" + dia;
+                    dataNumerica = dia + "-" + mesNum + "-" + ano;
+                }
+            }
+            return dataNumerica;
+        }
+
         @Override
         public Component getListCellRendererComponent(JList<? extends Jogo> list, Jogo jogo, int index, boolean isSelected, boolean cellHasFocus) {
             if (jogo != null) {
-                lblInfo.setText("<html><b>" + jogo.getSelecaoA() + " vs " + jogo.getSelecaoB() + "</b><br><font color='gray'>" + jogo.getHora() + " · " + jogo.getData() + "</font></html>");
+                lblInfo.setText("<html><b>" + jogo.getSelecaoA() + " vs " + jogo.getSelecaoB() + "</b><br><font color='gray'>" + obterDataFormatada(jogo.getData()) + " · " + jogo.getHora() + "</font></html>");
                 lblVisto.setVisible(jogo.getEquipaArbitragem() != null && !jogo.getEquipaArbitragem().isEmpty());
             }
             setBackground(isSelected ? new Color(232, 240, 254) : Color.WHITE);
             return this;
         }
+    }
+
+    private void addCampoFormulario(JPanel painel, String labelTexto, JComboBox<?> combo) {
+        JLabel lbl = new JLabel(labelTexto);
+        lbl.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        lbl.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        // 🌟 ALTERAÇÃO AQUI: Mudar de 450 para Integer.MAX_VALUE para acompanhar a janela toda
+        combo.setMaximumSize(new Dimension(Integer.MAX_VALUE, 35));
+        combo.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        painel.add(lbl);
+        painel.add(Box.createVerticalStrut(4));
+        painel.add(combo);
+        painel.add(Box.createVerticalStrut(12));
     }
 }
