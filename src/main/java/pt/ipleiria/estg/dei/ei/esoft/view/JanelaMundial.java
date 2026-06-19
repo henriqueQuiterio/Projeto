@@ -57,13 +57,13 @@ public class JanelaMundial extends JFrame {
     private JPanel painelResultados;
     private JList listaJogosResultados;
     private JTextField txtGolosA;
-    private JLabel lblSiglaA;
+    JLabel lblSiglaA;
     private JTextField txtGolosB;
-    private JLabel lblSiglaB;
-    private JButton btnAdicionarEvento;
+    JLabel lblSiglaB;
+    JButton btnAdicionarEvento;
     private JTable tabelaEventos;
-    private JLabel lblEstatisticaA;
-    private JLabel lblEstatisticaB;
+    JLabel lblEstatisticaA;
+    JLabel lblEstatisticaB;
     private JTextField txtPosseA;
     private JTextField txtPosseB;
     private JTextField txtRematesA;
@@ -102,7 +102,7 @@ public class JanelaMundial extends JFrame {
         PainelResultados abaResultadosLogica = new PainelResultados(controller,
                 listaJogosResultados, txtGolosA, txtGolosB, txtPosseA, txtPosseB,
                 txtRematesA, txtRematesB, txtCantosA, txtCantosB, txtFaltasA, txtFaltasB,
-                cbMOTM, btnSubmeter, btnEditar, btnCancelarAlteracoes, tabelaEventos);
+                cbMOTM, btnSubmeter, btnEditar, btnCancelarAlteracoes, tabelaEventos, abaCalendarioLimpa);
 
         // 2. Acoplar ao TabbedPane do ecrã
         abasPrincipais.removeAll(); // Limpa as abas em branco padrão do editor gráfico
@@ -141,7 +141,7 @@ public class JanelaMundial extends JFrame {
         java.io.File ficheiro = new java.io.File("dados_mundial.dat");
 
         if (ficheiro.exists()) {
-            // Se o ficheiro já existe, lê o que gravaste e IGNERA a lista padrão antiga!
+            controller.inicializarDadosPredefinidos();
             controller.carregarDados();
         } else {
 

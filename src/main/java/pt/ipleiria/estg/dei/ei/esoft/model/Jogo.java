@@ -26,8 +26,16 @@ public class Jogo implements Serializable {
     private int golosA;
     private int golosB;
 
+    private int posseA, posseB;
+    private int rematesA, rematesB;
+    private int cantosA, cantosB;
+    private int faltasA, faltasB;
+
     private boolean concluido;
     private List<Arbitro> equipaArbitragem;
+    private List<String> autoresGolos = new ArrayList<>();
+    private List<String> autoresAssistencias = new ArrayList<>();
+    private List<String[]> eventosDoJogo = new ArrayList<>();
 
     public Jogo(String data, String hora, String fusoHorario, String fase, String grupo,
                 String estadio, String cidade,
@@ -167,4 +175,35 @@ public class Jogo implements Serializable {
     public void setMotm(String motm) {
         this.motm = motm;
     }
+
+    public void registarGoloComAssistencia(String nomeMarcador, String nomeAssistente) {
+        if (nomeMarcador != null) this.autoresGolos.add(nomeMarcador);
+        if (nomeAssistente != null) this.autoresAssistencias.add(nomeAssistente);
+    }
+
+    public List<String> getAutoresGolos() { return autoresGolos; }
+    public List<String> getAutoresAssistencias() { return autoresAssistencias; }
+
+    public int getPosseA() { return posseA; }
+    public void setPosseA(int posseA) { this.posseA = posseA; }
+    public int getPosseB() { return posseB; }
+    public void setPosseB(int posseB) { this.posseB = posseB; }
+
+    public int getRematesA() { return rematesA; }
+    public void setRematesA(int rematesA) { this.rematesA = rematesA; }
+    public int getRematesB() { return rematesB; }
+    public void setRematesB(int rematesB) { this.rematesB = rematesB; }
+
+    public int getCantosA() { return cantosA; }
+    public void setCantosA(int cantosA) { this.cantosA = cantosA; }
+    public int getCantosB() { return cantosB; }
+    public void setCantosB(int cantosB) { this.cantosB = cantosB; }
+
+    public int getFaltasA() { return faltasA; }
+    public void setFaltasA(int faltasA) { this.faltasA = faltasA; }
+    public int getFaltasB() { return faltasB; }
+    public void setFaltasB(int faltasB) { this.faltasB = faltasB; }
+
+    public List<String[]> getEventosDoJogo() { return eventosDoJogo; }
+    public void setEventosDoJogo(List<String[]> eventos) { this.eventosDoJogo = eventos; }
 }

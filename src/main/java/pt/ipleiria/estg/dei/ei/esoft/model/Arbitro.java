@@ -1,6 +1,5 @@
 package pt.ipleiria.estg.dei.ei.esoft.model;
 
-import javax.swing.*;
 import java.io.Serializable;
 
 public class Arbitro implements Serializable {
