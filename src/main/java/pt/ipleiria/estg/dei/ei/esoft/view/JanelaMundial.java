@@ -5,12 +5,7 @@ import pt.ipleiria.estg.dei.ei.esoft.model.Arbitro;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
 
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.List;
 
 public class JanelaMundial extends JFrame {
     // --- COMPONENTES DA ÁRVORE DO .FORM (Mapeamento exato para evitar erros de Binding) ---
@@ -38,6 +33,30 @@ public class JanelaMundial extends JFrame {
     private JComboBox<Arbitro> comboVar;
     private JButton btnConfirmarEquipa;
     private JLabel lblStatusValidacao;
+
+    private JPanel abaResultados;
+    private JPanel painelResultados;
+    private JList listaJogosResultados;
+    private JTextField txtGolosA;
+    private JLabel lblSiglaA;
+    private JTextField txtGolosB;
+    private JLabel lblSiglaB;
+    private JButton btnAdicionarEvento;
+    private JTable tabelaEventos;
+    private JLabel lblEstatisticaA;
+    private JLabel lblEstatisticaB;
+    private JTextField txtPosseA;
+    private JTextField txtPosseB;
+    private JTextField txtRematesA;
+    private JTextField txtRematesB;
+    private JTextField txtCantosA;
+    private JTextField txtCantosB;
+    private JTextField txtFaltasA;
+    private JTextField txtFaltasB;
+    private JButton btnSubmeter;
+    private JButton btnEditar;
+    private JButton btnCancelarAlteracoes;
+    private JComboBox cbMOTM;
 
     private MundialController controller;
     private boolean acabouDeAlocarComSucesso = false;
