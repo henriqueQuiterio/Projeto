@@ -58,7 +58,8 @@ public class PainelCalendario extends JPanel {
         List<Jogo> listaJogos = new ArrayList<>(controller.getCalendarioJogos());
 
         if (listaJogos.isEmpty()) {
-            Jogo jogoAviso = new Jogo("AVISO", "", "", "", "", "", "", "Não existem jogos agendados de momento.", "", "", "Por favor, volte a tentar mais tarde.", "", "");
+            // O erro está aqui, falta o argumento da capacidade (int)
+            Jogo jogoAviso = new Jogo("AVISO", "", "", "", "", "", 0,"", "Não existem jogos agendados de momento.", "", "", "Por favor, volte a tentar mais tarde.", "", "");
             modeloListaJogos.addElement(jogoAviso);
             return;
         }

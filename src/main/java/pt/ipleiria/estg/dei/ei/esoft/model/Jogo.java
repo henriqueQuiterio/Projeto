@@ -30,6 +30,7 @@ public class Jogo implements Serializable {
     private int rematesA, rematesB;
     private int cantosA, cantosB;
     private int faltasA, faltasB;
+    private int capacidade;
 
     private boolean concluido;
     private List<Arbitro> equipaArbitragem;
@@ -38,7 +39,7 @@ public class Jogo implements Serializable {
     private List<String[]> eventosDoJogo = new ArrayList<>();
 
     public Jogo(String data, String hora, String fusoHorario, String fase, String grupo,
-                String estadio, String cidade,
+                String estadio, int capacidade, String cidade,
                 String selecaoA, String siglaA, String nacionalidadeSelecaoA,
                 String selecaoB, String siglaB, String nacionalidadeSelecaoB) {
 
@@ -49,6 +50,7 @@ public class Jogo implements Serializable {
         this.grupo = grupo;
         this.estadio = estadio;
         this.cidade = cidade;
+        this.capacidade = capacidade;
 
         this.selecaoA = selecaoA;
         this.siglaA = siglaA;
@@ -206,4 +208,6 @@ public class Jogo implements Serializable {
 
     public List<String[]> getEventosDoJogo() { return eventosDoJogo; }
     public void setEventosDoJogo(List<String[]> eventos) { this.eventosDoJogo = eventos; }
+
+    public int getCapacidade() { return capacidade; }
 }
