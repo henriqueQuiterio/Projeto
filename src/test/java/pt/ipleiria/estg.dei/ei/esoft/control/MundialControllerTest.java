@@ -7,8 +7,6 @@ import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogador;
 import pt.ipleiria.estg.dei.ei.esoft.model.Selecao;
 
-
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +19,10 @@ public class MundialControllerTest {
     @BeforeEach
     public void setUp() {
         controller = new MundialController();
+
+        // Necessário para os testes da janela de seleções.
+        controller.inicializarSelecoes();
+
         // Criar um jogo de teste: Portugal vs Espanha
         jogoPortugalEspanha = new Jogo(
                 "15/06/2026", "20:00", "GMT+1", "Fase de Grupos", "Grupo A",
@@ -47,7 +49,7 @@ public class MundialControllerTest {
     @Test
     public void testInsucessoArbitroComMesmaNacionalidadeDumaSelecao() {
         List<Arbitro> equipaInvalida = new ArrayList<>();
-        equipaInvalida.add(new Arbitro("Manuel Silva", "Portuguesa", "Principal")); // Inválido: mesma nacionalidade de Portugal
+        equipaInvalida.add(new Arbitro("Manuel Silva", "Portuguesa", "Principal"));
         equipaInvalida.add(new Arbitro("Jane Doe", "Francesa", "Assistente"));
         equipaInvalida.add(new Arbitro("Pierre", "Francesa", "Assistente"));
         equipaInvalida.add(new Arbitro("Anssi", "Finlandesa", "VAR"));
@@ -66,8 +68,6 @@ public class MundialControllerTest {
             controller.alocarEquipaArbitragem(jogoPortugalEspanha, equipaIncompleta);
         });
     }
-
-
 
     @Test
     public void testConsultarInformacaoSelecaoPortugal() {
@@ -177,6 +177,133 @@ public class MundialControllerTest {
 
         assertFalse(existeJogadorComNumero(portugal, 98));
     }
+
+    @Test
+    public void testMelhoresMarcadoresPorEventosContaGolosCorretamente() {
+        Jogo jogo = criarJogoTeste("México", "África do Sul", "Grupo A");
+        jogo.setConcluido(true);
+
+        List<String[]> eventos = new ArrayList<>();
+        eventos.add(new String[]{"10'", "Golo", "Raul Jimenez (México) | Assist: Alexis Vega (México)"});
+        eventos.add(new String[]{"25'", "Golo", "Raul Jimenez (México) | Assist: Luis Romo (México)"});
+        eventos.add(new String[]{"40'", "Cartão Amarelo", "Cesar Montes (México)"});
+
+        jogo.setEventosDoJogo(eventos);
+        controller.adicionarJogo(jogo);
+
+        List<String[]> ranking = controller.getMelhoresMarcadoresPorEventos();
+
+        assertFalse(ranking.isEmpty());
+        assertEquals("1. Raul Jimenez", ranking.get(0)[0]);
+        assertEquals("México", ranking.get(0)[1]);
+        assertEquals("2", ranking.get(0)[2]);
+    }
+
+    @Test
+    public void testLideresAssistenciasPorEventosContaAssistenciasCorretamente() {
+        Jogo jogo = criarJogoTeste("México", "África do Sul", "Grupo A");
+        jogo.setConcluido(true);
+
+        List<String[]> eventos = new ArrayList<>();
+        eventos.add(new String[]{"10'", "Golo", "Raul Jimenez (México) | Assist: Alexis Vega (México)"});
+        eventos.add(new String[]{"30'", "Golo", "Santiago Gimenez (México) | Assist: Alexis Vega (México)"});
+        eventos.add(new String[]{"60'", "Golo", "Lyle Foster (África do Sul)"});
+
+        jogo.setEventosDoJogo(eventos);
+        controller.adicionarJogo(jogo);
+
+        List<String[]> ranking = controller.getLideresAssistenciasPorEventos();
+
+        assertFalse(ranking.isEmpty());
+        assertEquals("1. Alexis Vega", ranking.get(0)[0]);
+        assertEquals("México", ranking.get(0)[1]);
+        assertEquals("2", ranking.get(0)[2]);
+    }
+
+    @Test
+    public void testGolosSemAssistenciaNaoEntramNoRankingDeAssistencias() {
+        Jogo jogo = criarJogoTeste("México", "África do Sul", "Grupo A");
+        jogo.setConcluido(true);
+
+        List<String[]> eventos = new ArrayList<>();
+        eventos.add(new String[]{"15'", "Golo", "Raul Jimenez (México)"});
+        eventos.add(new String[]{"50'", "Golo", "Lyle Foster (África do Sul)"});
+
+        jogo.setEventosDoJogo(eventos);
+        controller.adicionarJogo(jogo);
+
+        List<String[]> rankingAssistencias = controller.getLideresAssistenciasPorEventos();
+
+        assertTrue(rankingAssistencias.isEmpty());
+    }
+
+    @Test
+    public void testRankingIgnoraEventosQueNaoSaoGolos() {
+        Jogo jogo = criarJogoTeste("México", "África do Sul", "Grupo A");
+        jogo.setConcluido(true);
+
+        List<String[]> eventos = new ArrayList<>();
+        eventos.add(new String[]{"20'", "Cartão Amarelo", "Cesar Montes (México)"});
+        eventos.add(new String[]{"70'", "Substituição", "Raul Jimenez (México) > Santiago Gimenez (México)"});
+
+        jogo.setEventosDoJogo(eventos);
+        controller.adicionarJogo(jogo);
+
+        List<String[]> rankingMarcadores = controller.getMelhoresMarcadoresPorEventos();
+        List<String[]> rankingAssistencias = controller.getLideresAssistenciasPorEventos();
+
+        assertTrue(rankingMarcadores.isEmpty());
+        assertTrue(rankingAssistencias.isEmpty());
+    }
+
+    @Test
+    public void testConsultarJogosPorFaseParaBracketDaFaseFinal() {
+        Jogo jogoGrupo = criarJogoTeste("México", "África do Sul", "Grupo A");
+
+        Jogo jogoFinal = new Jogo(
+                "Domingo 19 Julho 2026",
+                "20:00",
+                "GMT+0",
+                "Final",
+                "",
+                "MetLife Stadium",
+                "Nova Iorque",
+                "Portugal",
+                "POR",
+                "Portuguesa",
+                "Brasil",
+                "BRA",
+                "Brasileira"
+        );
+
+        controller.adicionarJogo(jogoGrupo);
+        controller.adicionarJogo(jogoFinal);
+
+        List<Jogo> jogosFinal = controller.consultarJogosPorFase("Final");
+
+        assertEquals(1, jogosFinal.size());
+        assertEquals("Portugal", jogosFinal.get(0).getSelecaoA());
+        assertEquals("Brasil", jogosFinal.get(0).getSelecaoB());
+    }
+
+    private Jogo criarJogoTeste(String selecaoA, String selecaoB, String grupo) {
+        return new Jogo(
+                "Quinta-Feira 11 Junho 2026",
+                "16:00",
+                "GMT+0",
+                "Primeira fase",
+                grupo,
+                "Estádio Teste",
+                "Cidade Teste",
+                selecaoA,
+                "AAA",
+                "Nacionalidade A",
+                selecaoB,
+                "BBB",
+                "Nacionalidade B"
+        );
+    }
+
     private Selecao obterSelecaoPorNome(String nome) {
         for (Selecao selecao : controller.getSelecoesParticipantes()) {
             if (selecao.getPais().equalsIgnoreCase(nome)) {
