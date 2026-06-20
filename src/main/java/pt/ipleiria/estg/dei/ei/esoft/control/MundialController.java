@@ -14,7 +14,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MundialController {
     private List<Jogo> calendarioJogos;
@@ -170,6 +173,165 @@ public class MundialController {
                 .sorted((j1, j2) -> Integer.compare(j2.getGolos(), j1.getGolos()))
                 .limit(5)
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+
+    public List<String[]> getMelhoresMarcadoresPorEventos() {
+        return obterRankingEventos(true);
+    }
+
+    public List<String[]> getLideresAssistenciasPorEventos() {
+        return obterRankingEventos(false);
+    }
+
+    private List<String[]> obterRankingEventos(boolean contarGolos) {
+        Map<String, Integer> contagem = new HashMap<>();
+
+        for (Jogo jogo : calendarioJogos) {
+            if (jogo == null) {
+                continue;
+            }
+
+            // Fonte principal: eventos guardados na aba Resultados.
+            if (jogo.getEventosDoJogo() != null) {
+                for (String[] evento : jogo.getEventosDoJogo()) {
+                    if (evento == null || evento.length < 3) {
+                        continue;
+                    }
+
+                    String tipo = evento[1];
+                    String detalhes = evento[2];
+
+                    if (!"Golo".equalsIgnoreCase(tipo)) {
+                        continue;
+                    }
+
+                    String jogador;
+
+                    if (contarGolos) {
+                        jogador = extrairMarcador(detalhes);
+                    } else {
+                        jogador = extrairAssistente(detalhes);
+                    }
+
+                    adicionarAoRanking(contagem, jogador);
+                }
+            }
+
+            // Compatibilidade com a estrutura antiga do Jogo, caso algum dia seja usada.
+            if (contarGolos && jogo.getAutoresGolos() != null) {
+                for (String marcador : jogo.getAutoresGolos()) {
+                    adicionarAoRanking(contagem, marcador);
+                }
+            }
+
+            if (!contarGolos && jogo.getAutoresAssistencias() != null) {
+                for (String assistente : jogo.getAutoresAssistencias()) {
+                    adicionarAoRanking(contagem, assistente);
+                }
+            }
+        }
+
+        List<Map.Entry<String, Integer>> entradas = new ArrayList<>(contagem.entrySet());
+
+        entradas.sort(
+                Comparator.<Map.Entry<String, Integer>>comparingInt(Map.Entry::getValue)
+                        .reversed()
+                        .thenComparing(Map.Entry::getKey)
+        );
+
+        List<String[]> resultado = new ArrayList<>();
+        int posicao = 1;
+
+        for (Map.Entry<String, Integer> entrada : entradas) {
+            if (posicao > 5) {
+                break;
+            }
+
+            String jogadorCompleto = entrada.getKey();
+
+            resultado.add(new String[]{
+                    posicao + ". " + extrairNomeJogador(jogadorCompleto),
+                    extrairSelecaoJogador(jogadorCompleto),
+                    String.valueOf(entrada.getValue())
+            });
+
+            posicao++;
+        }
+
+        return resultado;
+    }
+
+    private void adicionarAoRanking(Map<String, Integer> contagem, String jogador) {
+        if (jogador == null) {
+            return;
+        }
+
+        jogador = jogador.trim();
+
+        if (jogador.isBlank() || jogador.equalsIgnoreCase("Sem assistência")) {
+            return;
+        }
+
+        contagem.put(jogador, contagem.getOrDefault(jogador, 0) + 1);
+    }
+
+    private String extrairMarcador(String detalhes) {
+        if (detalhes == null || detalhes.isBlank()) {
+            return "";
+        }
+
+        int indice = detalhes.indexOf("| Assist:");
+
+        if (indice == -1) {
+            return detalhes.trim();
+        }
+
+        return detalhes.substring(0, indice).trim();
+    }
+
+    private String extrairAssistente(String detalhes) {
+        if (detalhes == null || detalhes.isBlank()) {
+            return "";
+        }
+
+        String marcador = "| Assist:";
+        int indice = detalhes.indexOf(marcador);
+
+        if (indice == -1) {
+            return "";
+        }
+
+        return detalhes.substring(indice + marcador.length()).trim();
+    }
+
+    private String extrairNomeJogador(String jogadorCompleto) {
+        if (jogadorCompleto == null) {
+            return "";
+        }
+
+        int indice = jogadorCompleto.lastIndexOf(" (");
+
+        if (indice == -1) {
+            return jogadorCompleto.trim();
+        }
+
+        return jogadorCompleto.substring(0, indice).trim();
+    }
+
+    private String extrairSelecaoJogador(String jogadorCompleto) {
+        if (jogadorCompleto == null) {
+            return "";
+        }
+
+        int inicio = jogadorCompleto.lastIndexOf("(");
+        int fim = jogadorCompleto.lastIndexOf(")");
+
+        if (inicio == -1 || fim == -1 || fim <= inicio) {
+            return "";
+        }
+
+        return jogadorCompleto.substring(inicio + 1, fim).trim();
     }
 
     // =========================

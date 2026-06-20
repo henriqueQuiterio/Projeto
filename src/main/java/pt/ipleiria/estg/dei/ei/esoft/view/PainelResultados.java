@@ -231,13 +231,60 @@ public class PainelResultados extends JPanel {
                                     modeloTabelaEventos.addRow(new Object[]{minuto + "'", "Substituição", sai + " > " + entra});
                                 }
                             }
-                        } else {
-                            // AQUI É O TEU CÓDIGO ANTIGO PARA GOLOS/CARTÕES
-                            String jogadorSelecionado = (String) JOptionPane.showInputDialog(this,
-                                    "Selecione o Jogador envolvido:", "Jogador",
-                                    JOptionPane.QUESTION_MESSAGE, null,
+                        } else if (tipoSelecionado.equals("Golo")) {
+                            String marcador = (String) JOptionPane.showInputDialog(
+                                    this,
+                                    "Selecione o marcador do golo:",
+                                    "Marcador",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
                                     jogadoresDisponiveis.toArray(new String[0]),
-                                    jogadoresDisponiveis.get(0));
+                                    jogadoresDisponiveis.get(0)
+                            );
+
+                            if (marcador == null) {
+                                return;
+                            }
+
+                            ArrayList<String> opcoesAssistencia = new ArrayList<>();
+                            opcoesAssistencia.add("Sem assistência");
+                            opcoesAssistencia.addAll(jogadoresDisponiveis);
+
+                            String assistente = (String) JOptionPane.showInputDialog(
+                                    this,
+                                    "Selecione o assistente:",
+                                    "Assistência",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    opcoesAssistencia.toArray(new String[0]),
+                                    opcoesAssistencia.get(0)
+                            );
+
+                            String detalhe;
+
+                            if (assistente == null || assistente.equals("Sem assistência")) {
+                                detalhe = marcador;
+                            } else {
+                                if (assistente.equals(marcador)) {
+                                    JOptionPane.showMessageDialog(this, "O assistente não pode ser o próprio marcador.");
+                                    return;
+                                }
+
+                                detalhe = marcador + " | Assist: " + assistente;
+                            }
+
+                            modeloTabelaEventos.addRow(new Object[]{minuto + "'", "Golo", detalhe});
+
+                        } else {
+                            String jogadorSelecionado = (String) JOptionPane.showInputDialog(
+                                    this,
+                                    "Selecione o Jogador envolvido:",
+                                    "Jogador",
+                                    JOptionPane.QUESTION_MESSAGE,
+                                    null,
+                                    jogadoresDisponiveis.toArray(new String[0]),
+                                    jogadoresDisponiveis.get(0)
+                            );
 
                             if (jogadorSelecionado != null) {
                                 modeloTabelaEventos.addRow(new Object[]{minuto + "'", tipoSelecionado, jogadorSelecionado});
@@ -331,6 +378,11 @@ public class PainelResultados extends JPanel {
 
             if (painelCalendarioRef != null) {
                 painelCalendarioRef.carregarEOrdenarCartoes();
+            }
+
+            Component topo = SwingUtilities.getWindowAncestor(listaJogos);
+            if (topo instanceof JanelaMundial) {
+                ((JanelaMundial) topo).atualizarAbaClassificacao();
             }
 
             modoEdicao(false);
