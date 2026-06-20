@@ -32,8 +32,9 @@ public class MundialController {
         this.calendarioJogos = new ArrayList<>();
         this.arbitrosDisponiveis = new ArrayList<>();
         this.selecoesParticipantes = new ArrayList<>();
-        this.estadios = new ArrayList<>();
         this.bilhetesEmitidos = new ArrayList<>();
+        this.estadios = new ArrayList<>();
+        inicializarEstadios();
     }
 
     // =========================
@@ -322,7 +323,7 @@ public class MundialController {
         return filtrados;
     }
 
-    public void emitirBilhete(Jogo jogo, String setor, int quantidade) {
+    public void emitirBilhete(Jogo jogo, String setor, String lugar, int quantidade) {
         if (jogo == null) {
             throw new IllegalArgumentException("É necessário selecionar um jogo.");
         }
@@ -331,6 +332,16 @@ public class MundialController {
         }
         if (quantidade <= 0) {
             throw new IllegalArgumentException("A quantidade de bilhetes tem de ser maior que zero.");
+        }
+
+        if (lugar != null && !lugar.equals("Lugar Livre")) {
+            /*if (quantidade > 1) {
+                throw new IllegalArgumentException("Ao escolher um lugar específico, a quantidade tem de ser 1.");
+            }*/
+            java.util.List<String> ocupados = getLugaresOcupados(jogo, setor);
+            if (ocupados.contains(lugar)) {
+                throw new IllegalArgumentException("O lugar " + lugar + " já está ocupado neste setor.");
+            }
         }
 
         int capacidadeMaximaSetor = 10000;
@@ -348,9 +359,39 @@ public class MundialController {
         }
 
         for (int i = 0; i < quantidade; i++) {
-            Bilhete novoBilhete = new Bilhete(jogo, setor);
+            Bilhete novoBilhete = new Bilhete(jogo, setor, lugar);
             this.bilhetesEmitidos.add(novoBilhete);
         }
+    }
+
+    public void emitirBilhetesMultiplos(Jogo jogo, String setor, List<String> lugaresEscolhidos) {
+        if (lugaresEscolhidos == null || lugaresEscolhidos.isEmpty()) {
+            throw new IllegalArgumentException("Seleciona pelo menos um lugar.");
+        }
+
+        // Valida se algum dos lugares selecionados já está ocupado
+        List<String> ocupados = getLugaresOcupados(jogo, setor);
+        for (String lugar : lugaresEscolhidos) {
+            if (ocupados.contains(lugar)) {
+                throw new IllegalArgumentException("O lugar " + lugar + " já está ocupado!");
+            }
+        }
+
+        // Cria um bilhete para cada lugar
+        for (String lugar : lugaresEscolhidos) {
+            this.bilhetesEmitidos.add(new Bilhete(jogo, setor, lugar));
+        }
+    }
+
+    public java.util.List<String> getLugaresOcupados(Jogo jogo, String setor) {
+        java.util.List<String> ocupados = new java.util.ArrayList<>();
+        for (Bilhete b : bilhetesEmitidos) {
+            if (b.getJogo().equals(jogo) && b.getSetor().equalsIgnoreCase(setor) &&
+                    b.getLugar() != null && !b.getLugar().equals("Lugar Livre")) {
+                ocupados.add(b.getLugar());
+            }
+        }
+        return ocupados;
     }
 
 
@@ -2178,121 +2219,104 @@ public class MundialController {
     }
 
     public void inicializarJogos(MundialController controller) {
-        controller.adicionarJogo(new Jogo("Quinta-Feira 11 Junho 2026", "16:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio da Cidade do México", "Cidade do México", "México", "MEX", "Mexicana", "África do Sul", "RSA", "Sul-africana"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 12 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio de Guadalajara", "Guadalajara", "Coreia do Sul", "KOR", "Sul-coreana", "Chéquia", "CZE", "Checa"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 12 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo B", "Estádio de Toronto", "Toronto", "Canadá", "CAN", "Canadiana", "Bósnia e Herzegovina", "BIH", "Bósnia"));
-        controller.adicionarJogo(new Jogo("Sábado 13 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo D", "Estádio de Los Angeles", "Los Angeles", "Estados Unidos", "USA", "Americana", "Paraguai", "PAR", "Paraguaia"));
-        controller.adicionarJogo(new Jogo("Sábado 13 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo B", "Estádio da Baía de São Francisco", "Área da baía de São Francisco", "Catar", "QAT", "Catarina", "Suíça", "SUI", "Suíça"));
-        controller.adicionarJogo(new Jogo("Sábado 13 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo C", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "Brasil", "BR", "Brasileira", "Marrocos", "MAR", "Marroquina"));
-        controller.adicionarJogo(new Jogo("Domingo 14 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo C", "Estádio de Boston", "Boston", "Haiti", "HAI", "Haitiana", "Escócia", "SCO", "Escocesa"));
-        controller.adicionarJogo(new Jogo("Domingo 14 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo D", "BC Place de Vancouver", "Vancouver", "Austrália", "AUS", "Australiana", "Turquia", "TUR", "Turca"));
-        controller.adicionarJogo(new Jogo("Domingo 14 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo E", "Estádio de Houston", "Houston", "Alemanha", "GER", "Alemã", "Curaçau", "CUW", "Curaçalense"));
-        controller.adicionarJogo(new Jogo("Domingo 14 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo F", "Estádio de Dallas", "Dallas", "Holanda", "NED", "Holandesa", "Japão", "JPN", "Japonesa"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 15 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo E", "Estádio de Filadélfia", "Filadélfia", "Costa do Marfim", "CIV", "Malandresa", "Equador", "ECU", "Equatoriana"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 15 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo F", "Estádio de Monterrey", "Monterrey", "Suécia", "SWE", "Sueca", "Tunísia", "TUN", "Tunisina"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 15 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Atlanta", "Atlanta", "Espanha", "ESP", "Espanhola", "Cabo Verde", "CPV", "Cabo-verdiana"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 15 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo G", "Estádio de Seattle", "Seattle", "Bélgica", "BEL", "Belga", "Egito", "EGY", "Egípcia"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 15 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Miami", "Miami", "Arábia Saudita", "KSA", "Saudita", "Uruguai", "URU", "Uruguaia"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 16 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo G", "Estádio de Los Angeles", "Los Angeles", "RI do Irã", "IRN", "Iraniana", "Nova Zelândia", "NZL", "Neo-zelandesa"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 16 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "França", "FRA", "Francesa", "Senegal", "SEN", "Senegalesa"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 16 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Boston", "Boston", "Iraque", "IRQ", "Iraquiana", "Noruega", "NOR", "Norueguesa"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 17 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio de Kansas City", "Kansas City", "Argentina", "ARG", "Argentina", "Argélia", "ALG", "Argelina"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 17 Junho 2026", "05:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio da Baía de São Francisco", "Área da baía de São Francisco", "Áustria", "AUT", "Austríaca", "Jordânia", "JOR", "Jordana"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 17 Junho 2026", "18:00", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Houston", "Houston", "Portugal", "PT", "Portuguesa", "RD do Congo", "COD", "Congolesa"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 17 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Dallas", "Dallas", "Inglaterra", "ENG", "Inglesa", "Croácia", "CRO", "Croata"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 18 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Toronto", "Toronto", "Gana", "GHA", "Ganesa", "Panamá", "PAN", "Panamiana"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 18 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo K", "Estádio da Cidade do México", "Cidade do México", "Uzbequistão", "UZB", "Usbeque", "Colômbia", "COL", "Colombiana"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 18 Junho 2026", "17:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio de Atlanta", "Atlanta", "Chéquia", "CZE", "Checa", "África do Sul", "RSA", "Sul-africana"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 18 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo B", "Estádio de Los Angeles", "Los Angeles", "Suíça", "SUI", "Suíça", "Bósnia e Herzegovina", "BIH", "Bósnia"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 18 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo B", "BC Place de Vancouver", "Vancouver", "Canadá", "CAN", "Canadiana", "Catar", "QAT", "Catarina"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 19 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio de Guadalajara", "Guadalajara", "México", "MEX", "Mexicana", "Coreia do Sul", "KOR", "Sul-coreana"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 19 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo D", "Estádio de Seattle", "Seattle", "Estados Unidos", "USA", "Americana", "Austrália", "AUS", "Australiana"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 19 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo C", "Estádio de Boston", "Boston", "Escócia", "SCO", "Escocesa", "Marrocos", "MAR", "Marroquina"));
-        controller.adicionarJogo(new Jogo("Sábado 20 Junho 2026", "01:30", "GMT+0", "Primeira fase", "Grupo C", "Estádio de Filadélfia", "Filadélfia", "Brasil", "BR", "Brasileira", "Haiti", "HAI", "Haitiana"));
-        controller.adicionarJogo(new Jogo("Sábado 20 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo D", "Estádio da Baía de São Francisco", "Área da baía de São Francisco", "Turquia", "TUR", "Turca", "Paraguai", "PAR", "Paraguaia"));
-        controller.adicionarJogo(new Jogo("Sábado 20 Junho 2026", "18:00", "GMT+0", "Primeira fase", "Grupo F", "Estádio de Houston", "Houston", "Holanda", "NED", "Holandesa", "Suécia", "SWE", "Sueca"));
-        controller.adicionarJogo(new Jogo("Sábado 20 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo E", "Estádio de Toronto", "Toronto", "Alemanha", "GER", "Alemã", "Costa do Marfim", "CIV", "Malandresa"));
-        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo E", "Estádio de Kansas City", "Kansas City", "Equador", "ECU", "Equatoriana", "Curaçau", "CUW", "Curaçalense"));
-        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "05:00", "GMT+0", "Primeira fase", "Grupo F", "Estádio de Monterrey", "Monterrey", "Tunísia", "TUN", "Tunisina", "Japão", "JPN", "Japonesa"));
-        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "17:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Atlanta", "Atlanta", "Espanha", "ESP", "Espanhola", "Arábia Saudita", "KSA", "Saudita"));
-        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo G", "Estádio de Los Angeles", "Los Angeles", "Bélgica", "BEL", "Belga", "RI do Irã", "IRN", "Iraniana"));
-        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Miami", "Miami", "Uruguai", "URU", "Uruguaia", "Cabo Verde", "CPV", "Cabo-verdiana"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 22 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo G", "BC Place de Vancouver", "Vancouver", "Nova Zelândia", "NZL", "Neo-zelandesa", "Egito", "EGY", "Egípcia"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 22 Junho 2026", "18:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio de Dallas", "Dallas", "Argentina", "ARG", "Argentina", "Áustria", "AUT", "Austríaca"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 22 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Filadélfia", "Filadélfia", "França", "FRA", "Francesa", "Iraque", "IRQ", "Iraquiana"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "Noruega", "NOR", "Norueguesa", "Senegal", "SEN", "Senegalesa"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio da Baía de São Francisco", "Área da baía de São Francisco", "Jordânia", "JOR", "Jordana", "Argélia", "ALG", "Argelina"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "18:00", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Houston", "Houston", "Portugal", "PT", "Portuguesa", "Uzbequistão", "UZB", "Usbeque"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Boston", "Boston", "Inglaterra", "ENG", "Inglesa", "Gana", "GHA", "Ganesa"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Toronto", "Toronto", "Panamá", "PAN", "Panamiana", "Croácia", "CRO", "Croata"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Guadalajara", "Guadalajara", "Colômbia", "COL", "Colombiana", "RD do Congo", "COD", "Congolesa"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo B", "BC Place de Vancouver", "Vancouver", "Suíça", "SUI", "Suíça", "Canadá", "CAN", "Canadiana"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo B", "Estádio de Seattle", "Seattle", "Bósnia e Herzegovina", "BIH", "Bósnia", "Catar", "QAT", "Catarina"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo C", "Estádio de Miami", "Miami", "Escócia", "SCO", "Escocesa", "Brasil", "BR", "Brasileira"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo C", "Estádio de Atlanta", "Atlanta", "Marrocos", "MAR", "Marroquina", "Haiti", "HAI", "Haitiana"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio da Cidade do México", "Cidade do México", "Chéquia", "CZE", "Checa", "México", "MEX", "Mexicana"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio de Monterrey", "Monterrey", "África do Sul", "RSA", "Sul-africana", "Coreia do Sul", "KOR", "Sul-coreana"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo E", "Estádio de Filadélfia", "Filadélfia", "Curaçau", "CUW", "Curaçalense", "Costa do Marfim", "CIV", "Malandresa"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo E", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "Equador", "ECU", "Equatoriana", "Alemanha", "GER", "Alemã"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo F", "Estádio de Dallas", "Dallas", "Japão", "JPN", "Japonesa", "Suécia", "SWE", "Sueca"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo F", "Estádio de Kansas City", "Kansas City", "Tunísia", "TUN", "Tunisina", "Holanda", "NED", "Holandesa"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo D", "Estádio de Los Angeles", "Los Angeles", "Turquia", "TUR", "Turca", "Estados Unidos", "USA", "Americana"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo D", "Estádio da Baía de São Francisco", "Área da baía de São Francisco", "Paraguai", "PAR", "Paraguaia", "Austrália", "AUS", "Australiana"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Boston", "Boston", "Noruega", "NOR", "Norueguesa", "França", "FRA", "Francesa"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Toronto", "Toronto", "Senegal", "SEN", "Senegalesa", "Iraque", "IRQ", "Iraquiana"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Houston", "Houston", "Cabo Verde", "CPV", "Cabo-verdiana", "Arábia Saudita", "KSA", "Saudita"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Guadalajara", "Guadalajara", "Uruguai", "URU", "Uruguaia", "Espanha", "ESP", "Espanhola"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", "Estádio de Seattle", "Seattle", "Egito", "EGY", "Egípcia", "Irão", "IRN", "Iraniana"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", "BC Place de Vancouver", "Vancouver", "Nova Zelândia", "NZL", "Neo-zelandesa", "Bélgica", "BEL", "Belga"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "Panamá", "PAN", "Panamiana", "Inglaterra", "ENG", "Inglesa"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Filadélfia", "Filadélfia", "Croácia", "CRO", "Croata", "Gana", "GHA", "Ganesa"));
-        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Miami", "Miami", "Colômbia", "COL", "Colombiana", "Portugal", "PT", "Portuguesa"));
-        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Atlanta", "Atlanta", "RD Congo", "COD", "Congolesa", "Uzbequistão", "UZB", "Usbeque"));
-        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio de Kansas City", "Kansas City", "Argélia", "ALG", "Argelina", "Áustria", "AUT", "Austríaca"));
-        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio de Dallas", "Dallas", "Jordânia", "JOR", "Jordana", "Argentina", "ARG", "Argentina"));
-        // Segundas de final
-        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "20:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Los Angeles", "Los Angeles", "2A", "2A", "Apurada", "2B", "2B", "Apurada"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 29 Junho 2026", "18:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Houston", "Houston", "1C", "1C", "Apurada", "2F", "2F", "Apurada"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 29 Junho 2026", "21:30", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Boston", "Boston", "1E", "1E", "Apurada", "3ABCDF", "3AB", "Apurada"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 30 Junho 2026", "02:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Monterrey", "Monterrey", "1F", "1F", "Apurada", "2C", "2C", "Apurada"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 30 Junho 2026", "18:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Dallas", "Dallas", "2E", "2E", "Apurada", "2I", "2I", "Apurada"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 30 Junho 2026", "22:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "1I", "1I", "Apurada", "3CDFGH", "3CD", "Apurada"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 01 Julho 2026", "02:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio da Cidade do México", "Cidade do México", "1A", "1A", "Apurada", "3CEFHI", "3CE", "Apurada"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 01 Julho 2026", "17:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Atlanta", "Atlanta", "1L", "1L", "Apurada", "3EHIJK", "3EH", "Apurada"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 01 Julho 2026", "21:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Seattle", "Seattle", "1G", "1G", "Apurada", "3AEHIJ", "3AE", "Apurada"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 02 Julho 2026", "01:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio da Baía de São Francisco", "Área da baía de São Francisco", "1D", "1D", "Apurada", "3BEFIJ", "3BE", "Apurada"));
-        controller.adicionarJogo(new Jogo("Quinta-Feira 02 Julho 2026", "20:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Los Angeles", "Los Angeles", "1H", "1H", "Apurada", "2J", "2J", "Apurada"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "00:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Toronto", "Toronto", "2K", "2K", "Apurada", "2L", "2L", "Apurada"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "04:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "BC Place de Vancouver", "Vancouver", "1B", "1B", "Apurada", "3EFGIJ", "3EF", "Apurada"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "19:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Dallas", "Dallas", "2D", "2D", "Apurada", "2G", "2G", "Apurada"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "23:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Miami", "Miami", "1J", "1J", "Apurada", "2H", "2H", "Apurada"));
-        controller.adicionarJogo(new Jogo("Sábado 04 Julho 2026", "02:30", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Kansas City", "Kansas City", "1K", "1K", "Apurada", "3DEIJL", "3DE", "Apurada"));
-
-        // Oitavas de final
-        controller.adicionarJogo(new Jogo("Sábado 04 Julho 2026", "18:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio de Houston", "Houston", "W73", "W73", "Vencedor", "W75", "W75", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Sábado 04 Julho 2026", "22:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio de Filadélfia", "Filadélfia", "W74", "W74", "Vencedor", "W77", "W77", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Domingo 05 Julho 2026", "21:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "W76", "W76", "Vencedor", "W78", "W78", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 06 Julho 2026", "01:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio da Cidade do México", "Cidade do México", "W79", "W79", "Vencedor", "W80", "W80", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Segunda-Feira 06 Julho 2026", "20:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio de Dallas", "Dallas", "W83", "W83", "Vencedor", "W84", "W84", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 07 Julho 2026", "01:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio de Seattle", "Seattle", "W81", "W81", "Vencedor", "W82", "W82", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 07 Julho 2026", "17:00", "GMT+0", "Oitavas de final", "Oitavos", "Estádio de Atlanta", "Atlanta", "W86", "W86", "Vencedor", "W88", "W88", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Terça-Feira 07 Julho 2026", "21:00", "GMT+0", "Oitavas de final", "Oitavos", "BC Place de Vancouver", "Vancouver", "W85", "W85", "Vencedor", "W87", "W87", "Vencedor"));
-
-        // Quartas de final
-        controller.adicionarJogo(new Jogo("Quinta-Feira 09 Julho 2026", "21:00", "GMT+0", "Quartas de final", "Quartos", "Estádio de Boston", "Boston", "W89", "W89", "Vencedor", "W90", "W90", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Sexta-Feira 10 Julho 2026", "20:00", "GMT+0", "Quartas de final", "Quartos", "Estádio de Los Angeles", "Los Angeles", "W93", "W93", "Vencedor", "W94", "W94", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Sábado 11 Julho 2026", "22:00", "GMT+0", "Quartas de final", "Quartos", "Estádio de Miami", "Miami", "W91", "W91", "Vencedor", "W92", "W92", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Domingo 12 Julho 2026", "02:00", "GMT+0", "Quartas de final", "Quartos", "Estádio de Kansas City", "Kansas City", "W95", "W95", "Vencedor", "W96", "W96", "Vencedor"));
-
-        // Semifinal
-        controller.adicionarJogo(new Jogo("Terça-Feira 14 Julho 2026", "20:00", "GMT+0", "Semifinal", "Semi", "Estádio de Dallas", "Dallas", "W97", "W97", "Vencedor", "W98", "W98", "Vencedor"));
-        controller.adicionarJogo(new Jogo("Quarta-Feira 15 Julho 2026", "20:00", "GMT+0", "Semifinal", "Semi", "Estádio de Atlanta", "Atlanta", "W99", "W99", "Vencedor", "W100", "W100", "Vencedor"));
-
-        // Decisão do 3º lugar
-        controller.adicionarJogo(new Jogo("Sábado 18 Julho 2026", "22:00", "GMT+0", "Decisão do 3º lugar", "3º Lugar", "Estádio de Miami", "Miami", "RU101", "RU1", "Derrotado", "RU102", "RU2", "Derrotado"));
-
-        // Final
-        controller.adicionarJogo(new Jogo("Domingo 19 Julho 2026", "20:00", "GMT+0", "Final", "Finalíssima", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "W101", "W101", "Campeão", "W102", "W102", "Campeão"));
-
+        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo E", getEstadioPorNome("Estádio de Kansas City").getNome(), "Kansas City", "Equador", "ECU", "Equatoriana", "Curaçau", "CUW", "Curaçalense"));
+        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "05:00", "GMT+0", "Primeira fase", "Grupo F", getEstadioPorNome("Estádio de Monterrey").getNome(), "Monterrey", "Tunísia", "TUN", "Tunisina", "Japão", "JPN", "Japonesa"));
+        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "17:00", "GMT+0", "Primeira fase", "Grupo H", getEstadioPorNome("Estádio de Atlanta").getNome(), "Atlanta", "Espanha", "ESP", "Espanhola", "Arábia Saudita", "KSA", "Saudita"));
+        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo G", getEstadioPorNome("Estádio de Los Angeles").getNome(), "Los Angeles", "Bélgica", "BEL", "Belga", "RI do Irã", "IRN", "Iraniana"));
+        controller.adicionarJogo(new Jogo("Domingo 21 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo H", getEstadioPorNome("Estádio de Miami").getNome(), "Miami", "Uruguai", "URU", "Uruguaia", "Cabo Verde", "CPV", "Cabo-verdiana"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 22 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo G", getEstadioPorNome("BC Place de Vancouver").getNome(), "Vancouver", "Nova Zelândia", "NZL", "Neo-zelandesa", "Egito", "EGY", "Egípcia"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 22 Junho 2026", "18:00", "GMT+0", "Primeira fase", "Grupo J", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "Argentina", "ARG", "Argentina", "Áustria", "AUT", "Austríaca"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 22 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo I", getEstadioPorNome("Estádio de Filadélfia").getNome(), "Filadélfia", "França", "FRA", "Francesa", "Iraque", "IRQ", "Iraquiana"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo I", getEstadioPorNome("Estádio de Nova York/Nova Jersey").getNome(), "Nova Jersey", "Noruega", "NOR", "Norueguesa", "Senegal", "SEN", "Senegalesa"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo J", getEstadioPorNome("Estádio da Baía de São Francisco").getNome(), "Área da baía de São Francisco", "Jordânia", "JOR", "Jordana", "Argélia", "ALG", "Argelina"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "18:00", "GMT+0", "Primeira fase", "Grupo K", getEstadioPorNome("Estádio de Houston").getNome(), "Houston", "Portugal", "PT", "Portuguesa", "Uzbequistão", "UZB", "Usbeque"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 23 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo L", getEstadioPorNome("Estádio de Boston").getNome(), "Boston", "Inglaterra", "ENG", "Inglesa", "Gana", "GHA", "Ganesa"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo L", getEstadioPorNome("Estádio de Toronto").getNome(), "Toronto", "Panamá", "PAN", "Panamiana", "Croácia", "CRO", "Croata"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo K", getEstadioPorNome("Estádio de Guadalajara").getNome(), "Guadalajara", "Colômbia", "COL", "Colombiana", "RD do Congo", "COD", "Congolesa"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo B", getEstadioPorNome("BC Place de Vancouver").getNome(), "Vancouver", "Suíça", "SUI", "Suíça", "Canadá", "CAN", "Canadiana"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo B", getEstadioPorNome("Estádio de Seattle").getNome(), "Seattle", "Bósnia e Herzegovina", "BIH", "Bósnia", "Catar", "QAT", "Catarina"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo C", getEstadioPorNome("Estádio de Miami").getNome(), "Miami", "Escócia", "SCO", "Escocesa", "Brasil", "BR", "Brasileira"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 24 Junho 2026", "23:00", "GMT+0", "Primeira fase", "Grupo C", getEstadioPorNome("Estádio de Atlanta").getNome(), "Atlanta", "Marrocos", "MAR", "Marroquina", "Haiti", "HAI", "Haitiana"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo A", getEstadioPorNome("Estádio da Cidade do México").getNome(), "Cidade do México", "Chéquia", "CZE", "Checa", "México", "MEX", "Mexicana"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "02:00", "GMT+0", "Primeira fase", "Grupo A", getEstadioPorNome("Estádio de Monterrey").getNome(), "Monterrey", "África do Sul", "RSA", "Sul-africana", "Coreia do Sul", "KOR", "Sul-coreana"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo E", getEstadioPorNome("Estádio de Filadélfia").getNome(), "Filadélfia", "Curaçau", "CUW", "Curaçalense", "Costa do Marfim", "CIV", "Malandresa"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 25 Junho 2026", "21:00", "GMT+0", "Primeira fase", "Grupo E", getEstadioPorNome("Estádio de Nova York/Nova Jersey").getNome(), "Nova Jersey", "Equador", "ECU", "Equatoriana", "Alemanha", "GER", "Alemã"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo F", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "Japão", "JPN", "Japonesa", "Suécia", "SWE", "Sueca"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "00:00", "GMT+0", "Primeira fase", "Grupo F", getEstadioPorNome("Estádio de Kansas City").getNome(), "Kansas City", "Tunísia", "TUN", "Tunisina", "Holanda", "NED", "Holandesa"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo D", getEstadioPorNome("Estádio de Los Angeles").getNome(), "Los Angeles", "Turquia", "TUR", "Turca", "Estados Unidos", "USA", "Americana"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo D", getEstadioPorNome("Estádio da Baía de São Francisco").getNome(), "Área da baía de São Francisco", "Paraguai", "PAR", "Paraguai", "Austrália", "AUS", "Australiana"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo I", getEstadioPorNome("Estádio de Boston").getNome(), "Boston", "Noruega", "NOR", "Norueguesa", "França", "FRA", "Francesa"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo I", getEstadioPorNome("Estádio de Toronto").getNome(), "Toronto", "Senegal", "SEN", "Senegalesa", "Iraque", "IRQ", "Iraquiana"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo H", getEstadioPorNome("Estádio de Houston").getNome(), "Houston", "Cabo Verde", "CPV", "Cabo-verdiana", "Arábia Saudita", "KSA", "Saudita"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo H", getEstadioPorNome("Estádio de Guadalajara").getNome(), "Guadalajara", "Uruguai", "URU", "Uruguaia", "Espanha", "ESP", "Espanhola"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", getEstadioPorNome("Estádio de Seattle").getNome(), "Seattle", "Egito", "EGY", "Egípcia", "Irão", "IRN", "Iraniana"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", getEstadioPorNome("BC Place de Vancouver").getNome(), "Vancouver", "Nova Zelândia", "NZL", "Neo-zelandesa", "Bélgica", "BEL", "Belga"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo L", getEstadioPorNome("Estádio de Nova York/Nova Jersey").getNome(), "Nova Jersey", "Panamá", "PAN", "Panamiana", "Inglaterra", "ENG", "Inglesa"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo L", getEstadioPorNome("Estádio de Filadélfia").getNome(), "Filadélfia", "Croácia", "CRO", "Croata", "Gana", "GHA", "Ganesa"));
+        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", getEstadioPorNome("Estádio de Miami").getNome(), "Miami", "Colômbia", "COL", "Colombiana", "Portugal", "PT", "Portuguesa"));
+        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", getEstadioPorNome("Estádio de Atlanta").getNome(), "Atlanta", "RD Congo", "COD", "Congolesa", "Uzbequistão", "UZB", "Usbeque"));
+        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo J", getEstadioPorNome("Estádio de Kansas City").getNome(), "Kansas City", "Argélia", "ALG", "Argelina", "Áustria", "AUT", "Austríaca"));
+        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo J", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "Jordânia", "JOR", "Jordana", "Argentina", "ARG", "Argentina"));
+        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "20:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Los Angeles").getNome(), "Los Angeles", "2A", "2A", "Apurada", "2B", "2B", "Apurada"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 29 Junho 2026", "18:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Houston").getNome(), "Houston", "1C", "1C", "Apurada", "2F", "2F", "Apurada"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 29 Junho 2026", "21:30", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Boston").getNome(), "Boston", "1E", "1E", "Apurada", "3ABCDF", "3AB", "Apurada"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 30 Junho 2026", "02:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Monterrey").getNome(), "Monterrey", "1F", "1F", "Apurada", "2C", "2C", "Apurada"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 30 Junho 2026", "18:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "2E", "2E", "Apurada", "2I", "2I", "Apurada"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 30 Junho 2026", "22:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Nova York/Nova Jersey").getNome(), "Nova Jersey", "1I", "1I", "Apurada", "3CDFGH", "3CD", "Apurada"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 01 Julho 2026", "02:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio da Cidade do México").getNome(), "Cidade do México", "1A", "1A", "Apurada", "3CEFHI", "3CE", "Apurada"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 01 Julho 2026", "17:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Atlanta").getNome(), "Atlanta", "1L", "1L", "Apurada", "3EHIJK", "3EH", "Apurada"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 01 Julho 2026", "21:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Seattle").getNome(), "Seattle", "1G", "1G", "Apurada", "3AEHIJ", "3AE", "Apurada"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 02 Julho 2026", "01:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio da Baía de São Francisco").getNome(), "Área da baía de São Francisco", "1D", "1D", "Apurada", "3BEFIJ", "3BE", "Apurada"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 02 Julho 2026", "20:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Los Angeles").getNome(), "Los Angeles", "1H", "1H", "Apurada", "2J", "2J", "Apurada"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "00:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Toronto").getNome(), "Toronto", "2K", "2K", "Apurada", "2L", "2L", "Apurada"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "04:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("BC Place de Vancouver").getNome(), "Vancouver", "1B", "1B", "Apurada", "3EFGIJ", "3EF", "Apurada"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "19:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "2D", "2D", "Apurada", "2G", "2G", "Apurada"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 03 Julho 2026", "23:00", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Miami").getNome(), "Miami", "1J", "1J", "Apurada", "2H", "2H", "Apurada"));
+        controller.adicionarJogo(new Jogo("Sábado 04 Julho 2026", "02:30", "GMT+0", "Segundas de final", "Dezasseis-avos", getEstadioPorNome("Estádio de Kansas City").getNome(), "Kansas City", "1K", "1K", "Apurada", "3DEIJL", "3DE", "Apurada"));
+        controller.adicionarJogo(new Jogo("Sábado 04 Julho 2026", "18:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio de Houston").getNome(), "Houston", "W73", "W73", "Vencedor", "W75", "W75", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Sábado 04 Julho 2026", "22:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio de Filadélfia").getNome(), "Filadélfia", "W74", "W74", "Vencedor", "W77", "W77", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Domingo 05 Julho 2026", "21:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio de Nova York/Nova Jersey").getNome(), "Nova Jersey", "W76", "W76", "Vencedor", "W78", "W78", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 06 Julho 2026", "01:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio da Cidade do México").getNome(), "Cidade do México", "W79", "W79", "Vencedor", "W80", "W80", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Segunda-Feira 06 Julho 2026", "20:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "W83", "W83", "Vencedor", "W84", "W84", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 07 Julho 2026", "01:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio de Seattle").getNome(), "Seattle", "W81", "W81", "Vencedor", "W82", "W82", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 07 Julho 2026", "17:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("Estádio de Atlanta").getNome(), "Atlanta", "W86", "W86", "Vencedor", "W88", "W88", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 07 Julho 2026", "21:00", "GMT+0", "Oitavas de final", "Oitavos", getEstadioPorNome("BC Place de Vancouver").getNome(), "Vancouver", "W85", "W85", "Vencedor", "W87", "W87", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Quinta-Feira 09 Julho 2026", "21:00", "GMT+0", "Quartas de final", "Quartos", getEstadioPorNome("Estádio de Boston").getNome(), "Boston", "W89", "W89", "Vencedor", "W90", "W90", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Sexta-Feira 10 Julho 2026", "20:00", "GMT+0", "Quartas de final", "Quartos", getEstadioPorNome("Estádio de Los Angeles").getNome(), "Los Angeles", "W93", "W93", "Vencedor", "W94", "W94", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Sábado 11 Julho 2026", "22:00", "GMT+0", "Quartas de final", "Quartos", getEstadioPorNome("Estádio de Miami").getNome(), "Miami", "W91", "W91", "Vencedor", "W92", "W92", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Domingo 12 Julho 2026", "02:00", "GMT+0", "Quartas de final", "Quartos", getEstadioPorNome("Estádio de Kansas City").getNome(), "Kansas City", "W95", "W95", "Vencedor", "W96", "W96", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Terça-Feira 14 Julho 2026", "20:00", "GMT+0", "Semifinal", "Semi", getEstadioPorNome("Estádio de Dallas").getNome(), "Dallas", "W97", "W97", "Vencedor", "W98", "W98", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Quarta-Feira 15 Julho 2026", "20:00", "GMT+0", "Semifinal", "Semi", getEstadioPorNome("Estádio de Atlanta").getNome(), "Atlanta", "W99", "W99", "Vencedor", "W100", "W100", "Vencedor"));
+        controller.adicionarJogo(new Jogo("Sábado 18 Julho 2026", "22:00", "GMT+0", "Decisão do 3º lugar", "3º Lugar", getEstadioPorNome("Estádio de Miami").getNome(), "Miami", "RU101", "RU1", "Derrotado", "RU102", "RU2", "Derrotado"));
+        controller.adicionarJogo(new Jogo("Domingo 19 Julho 2026", "20:00", "GMT+0", "Final", "Finalíssima", getEstadioPorNome("Estádio de Nova York/Nova Jersey").getNome(), "Nova Jersey", "W101", "W101", "Campeão", "W102", "W102", "Campeão"));
     }
+
+    // 1. Inicializa o catálogo (apenas uma vez)
+    private void inicializarEstadios() {
+        estadios.add(new Estadio("Estádio da Cidade do México", 80824));
+        estadios.add(new Estadio("Estádio de Guadalajara", 45664));
+        estadios.add(new Estadio("Estádio de Toronto", 43036));
+        estadios.add(new Estadio("Estádio de Los Angeles", 70492));
+        estadios.add(new Estadio("Estádio da Baía de São Francisco", 68827));
+        estadios.add(new Estadio("Estádio de Nova York/Nova Jersey", 80663));
+        estadios.add(new Estadio("Estádio de Boston", 64146));
+        estadios.add(new Estadio("BC Place de Vancouver", 52497));
+        estadios.add(new Estadio("Estádio de Houston", 68777));
+        estadios.add(new Estadio("Estádio de Dallas", 70649));
+        estadios.add(new Estadio("Estádio de Filadélfia", 68324));
+        estadios.add(new Estadio("Estádio de Monterrey", 51243));
+        estadios.add(new Estadio("Estádio de Atlanta", 68239));
+        estadios.add(new Estadio("Estádio de Seattle", 66925));
+        estadios.add(new Estadio("Estádio de Miami", 64478));
+        estadios.add(new Estadio("Estádio de Kansas City", 69045));
+    }
+
+    // 2. Método auxiliar para usar nos jogos
+    public Estadio getEstadioPorNome(String nome) {
+        for (Estadio e : estadios) {
+            if (e.getNome().equalsIgnoreCase(nome)) return e;
+        }
+        return new Estadio(nome, 50000); // Retorna um estádio genérico se não encontrar
+    }
+
 }

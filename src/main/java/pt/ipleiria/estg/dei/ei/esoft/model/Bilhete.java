@@ -9,11 +9,13 @@ public class Bilhete implements Serializable {
     private String codigo;
     private Jogo jogo;
     private String setor;
+    private String lugar;
 
-    public Bilhete(Jogo jogo, String setor) {
+    public Bilhete(Jogo jogo, String setor, String lugar) {
         this.codigo = UUID.randomUUID().toString().substring(0, 8).toUpperCase();
         this.jogo = jogo;
         this.setor = setor;
+        this.lugar = lugar != null ? lugar : "Lugar Livre";
     }
 
     public String getCodigo() {
@@ -28,8 +30,12 @@ public class Bilhete implements Serializable {
         return setor;
     }
 
+    public String getLugar() { // <-- NOVO GETTER
+        return lugar;
+    }
+
     @Override
     public String toString() {
-        return codigo + " - " + jogo.getSelecaoA() + " vs " + jogo.getSelecaoB() + " (" + setor + ")";
+        return codigo + " - " + jogo.getSelecaoA() + " vs " + jogo.getSelecaoB() + " (" + setor + " - " + lugar + ")";
     }
 }

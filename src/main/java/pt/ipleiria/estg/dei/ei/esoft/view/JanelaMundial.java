@@ -105,6 +105,7 @@ public class JanelaMundial extends JFrame {
     private JPanel painelJogoEstadio;
     private JLabel lblEstadio;
     private JLabel lblInfos;
+    private JList<String> listaLugares;
 
     private MundialController controller;
     private boolean acabouDeAlocarComSucesso = false;
@@ -154,13 +155,23 @@ public class JanelaMundial extends JFrame {
                 list1,
                 spinner1,
                 comboBox1, // Setor
-                comboBox2, // Lugar
+                listaLugares, // Lugar
                 btnGerarBilhetes,
                 table1,
                 lblEstadio,
                 lblInfos
         );
-
+        new PainelBilhetes(
+                controller,
+                list1,
+                spinner1,
+                comboBox1,
+                listaLugares,
+                btnGerarBilhetes,
+                table1,
+                lblEstadio,
+                lblInfos
+        );
         configurarAbaClassificacao();
 
         // 2. Acoplar ao TabbedPane do ecrã
