@@ -5,9 +5,12 @@ import pt.ipleiria.estg.dei.ei.esoft.model.Estadia;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogador;
 import pt.ipleiria.estg.dei.ei.esoft.model.Selecao;
 
+import javax.swing.AbstractCellEditor;
 import javax.swing.BorderFactory;
+import javax.swing.DefaultCellEditor;
 import javax.swing.DefaultListModel;
 import javax.swing.JButton;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
@@ -20,7 +23,10 @@ import javax.swing.ListSelectionModel;
 import javax.swing.event.DocumentEvent;
 import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableCellEditor;
+import javax.swing.table.TableCellRenderer;
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.FlowLayout;
 import java.awt.GridLayout;
 import java.util.ArrayList;
@@ -29,6 +35,8 @@ import java.util.List;
 import java.util.Set;
 
 public class PainelEquipas extends JPanel {
+
+    private static final int LIMITE_JOGADORES = 26;
 
     private final MundialController controller;
     private final List<Selecao> selecoes;
@@ -90,7 +98,7 @@ public class PainelEquipas extends JPanel {
         JPanel painel = new JPanel(new BorderLayout(8, 8));
         painel.setBorder(BorderFactory.createTitledBorder("Seleções"));
 
-        txtPesquisa = new JTextField("Procurar País...");
+        txtPesquisa = new JTextField();
 
         modeloListaSelecoes = new DefaultListModel<>();
         lstSelecoes = new JList<>(modeloListaSelecoes);
@@ -173,7 +181,7 @@ public class PainelEquipas extends JPanel {
 
         modeloTabelaJogadores = new DefaultTableModel(
                 new Object[][]{},
-                new String[]{"Nº", "Nome do Jogador", "Posição"}
+                new String[]{"Nº", "Nome do Jogador", "Posição", ""}
         ) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -182,7 +190,18 @@ public class PainelEquipas extends JPanel {
         };
 
         tblJogadores = new JTable(modeloTabelaJogadores);
-        tblJogadores.setRowHeight(25);
+        tblJogadores.setRowHeight(28);
+
+        JComboBox<String> comboPosicoes = new JComboBox<>(new String[]{"GR", "DEF", "MED", "AV"});
+        tblJogadores.getColumnModel().getColumn(2).setCellEditor(new DefaultCellEditor(comboPosicoes));
+
+        tblJogadores.getColumnModel().getColumn(3).setCellRenderer(new BotaoEliminarRenderer());
+        tblJogadores.getColumnModel().getColumn(3).setCellEditor(new BotaoEliminarEditor());
+
+        tblJogadores.getColumnModel().getColumn(0).setPreferredWidth(50);
+        tblJogadores.getColumnModel().getColumn(1).setPreferredWidth(220);
+        tblJogadores.getColumnModel().getColumn(2).setPreferredWidth(80);
+        tblJogadores.getColumnModel().getColumn(3).setPreferredWidth(60);
 
         painel.add(topo, BorderLayout.NORTH);
         painel.add(new JScrollPane(tblJogadores), BorderLayout.CENTER);
@@ -240,7 +259,7 @@ public class PainelEquipas extends JPanel {
     private void pesquisarSelecoes() {
         String termo = txtPesquisa.getText();
 
-        if (termo == null || termo.equalsIgnoreCase("Procurar País...")) {
+        if (termo == null) {
             termo = "";
         }
 
@@ -275,7 +294,8 @@ public class PainelEquipas extends JPanel {
             modeloTabelaJogadores.addRow(new Object[]{
                     jogador.getNumero(),
                     jogador.getNome(),
-                    jogador.getPosicao()
+                    jogador.getPosicao(),
+                    "🗑"
             });
         }
     }
@@ -311,16 +331,41 @@ public class PainelEquipas extends JPanel {
             return;
         }
 
+        if (modeloTabelaJogadores.getRowCount() >= LIMITE_JOGADORES) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Não é possível convocar mais de " + LIMITE_JOGADORES + " jogadores.",
+                    "Limite atingido",
+                    JOptionPane.WARNING_MESSAGE
+            );
+            return;
+        }
+
         modeloTabelaJogadores.addRow(new Object[]{
                 calcularProximoNumero(),
                 "Novo Jogador",
-                "AV"
+                "AV",
+                "🗑"
         });
     }
 
     private void guardarPlantel() {
         if (selecaoAtual == null) {
             JOptionPane.showMessageDialog(this, "Seleciona uma seleção primeiro.");
+            return;
+        }
+
+        if (tblJogadores.isEditing()) {
+            tblJogadores.getCellEditor().stopCellEditing();
+        }
+
+        if (modeloTabelaJogadores.getRowCount() > LIMITE_JOGADORES) {
+            JOptionPane.showMessageDialog(
+                    this,
+                    "Uma seleção só pode ter no máximo " + LIMITE_JOGADORES + " jogadores convocados.",
+                    "Plantel inválido",
+                    JOptionPane.ERROR_MESSAGE
+            );
             return;
         }
 
@@ -347,6 +392,16 @@ public class PainelEquipas extends JPanel {
 
                 numerosUsados.add(numero);
                 novosJogadores.add(new Jogador(numero, nome, posicao));
+            }
+
+            if (novosJogadores.size() > LIMITE_JOGADORES) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "Uma seleção só pode ter no máximo " + LIMITE_JOGADORES + " jogadores convocados.",
+                        "Plantel inválido",
+                        JOptionPane.ERROR_MESSAGE
+                );
+                return;
             }
 
             selecaoAtual.getJogadores().clear();
@@ -395,5 +450,70 @@ public class PainelEquipas extends JPanel {
         }
 
         return maior + 1;
+    }
+
+    private class BotaoEliminarRenderer extends JButton implements TableCellRenderer {
+
+        public BotaoEliminarRenderer() {
+            setText("🗑");
+            setFocusable(false);
+        }
+
+        @Override
+        public Component getTableCellRendererComponent(
+                JTable table,
+                Object value,
+                boolean isSelected,
+                boolean hasFocus,
+                int row,
+                int column
+        ) {
+            return this;
+        }
+    }
+
+    private class BotaoEliminarEditor extends AbstractCellEditor implements TableCellEditor {
+
+        private final JButton button;
+        private int linha;
+
+        public BotaoEliminarEditor() {
+            button = new JButton("🗑");
+            button.setFocusable(false);
+
+            button.addActionListener(e -> {
+                if (linha >= 0 && linha < modeloTabelaJogadores.getRowCount()) {
+                    int resposta = JOptionPane.showConfirmDialog(
+                            PainelEquipas.this,
+                            "Tens a certeza que queres eliminar este jogador?",
+                            "Confirmar eliminação",
+                            JOptionPane.YES_NO_OPTION
+                    );
+
+                    if (resposta == JOptionPane.YES_OPTION) {
+                        modeloTabelaJogadores.removeRow(linha);
+                    }
+                }
+
+                fireEditingStopped();
+            });
+        }
+
+        @Override
+        public Component getTableCellEditorComponent(
+                JTable table,
+                Object value,
+                boolean isSelected,
+                int row,
+                int column
+        ) {
+            this.linha = row;
+            return button;
+        }
+
+        @Override
+        public Object getCellEditorValue() {
+            return "🗑";
+        }
     }
 }
