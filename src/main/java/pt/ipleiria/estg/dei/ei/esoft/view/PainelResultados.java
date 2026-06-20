@@ -391,34 +391,36 @@ public class PainelResultados extends JPanel {
         if (jogo == null) return;
 
         try {
-            int pA = Integer.parseInt(txtPosseA.getText());
-            int pB = Integer.parseInt(txtPosseB.getText());
+            // 1. Ler os valores das caixas de texto
+            String textoPosseA = txtPosseA.getText().trim();
+            String textoPosseB = txtPosseB.getText().trim();
 
-            // Validação simples:
-            if ((pA + pB) != 100) {
+            int pA = textoPosseA.isBlank() ? 0 : Integer.parseInt(textoPosseA);
+            int pB = textoPosseB.isBlank() ? 0 : Integer.parseInt(textoPosseB);
+
+            // 🌟 A CORRECÇÃO ESTÁ AQUI: Só valida os 100% se pelo menos uma das caixas tiver sido preenchida com um valor maior que 0
+            if ((pA > 0 || pB > 0) && (pA + pB != 100)) {
                 JOptionPane.showMessageDialog(this, "Erro: A soma da posse de bola tem de ser exatamente 100%.");
-                return; // Interrompe o processo e não guarda nada
+                return; // Bloqueia a gravação
             }
 
-            // Se passar na validação, guarda:
+            // Se passar (ou se ambos forem 0), guarda os valores no objeto Jogo:
             jogo.setPosseA(pA);
             jogo.setPosseB(pB);
 
-            // 1. Gravar golos e MOTM
-            jogo.definirResultado(Integer.parseInt(txtGolosA.getText()), Integer.parseInt(txtGolosB.getText()));
+            // 2. Gravar golos e MOTM
+            jogo.definirResultado(Integer.parseInt(txtGolosA.getText().trim()), Integer.parseInt(txtGolosB.getText().trim()));
             jogo.setMotm((String) cbMOTM.getSelectedItem());
 
-            // 2. Gravar Estatísticas Técnicas (Novo!)
-            jogo.setPosseA(Integer.parseInt(txtPosseA.getText().isBlank() ? "0" : txtPosseA.getText()));
-            jogo.setPosseB(Integer.parseInt(txtPosseB.getText().isBlank() ? "0" : txtPosseB.getText()));
-            jogo.setRematesA(Integer.parseInt(txtRematesA.getText().isBlank() ? "0" : txtRematesA.getText()));
-            jogo.setRematesB(Integer.parseInt(txtRematesB.getText().isBlank() ? "0" : txtRematesB.getText()));
-            jogo.setCantosA(Integer.parseInt(txtCantosA.getText().isBlank() ? "0" : txtCantosA.getText()));
-            jogo.setCantosB(Integer.parseInt(txtCantosB.getText().isBlank() ? "0" : txtCantosB.getText()));
-            jogo.setFaltasA(Integer.parseInt(txtFaltasA.getText().isBlank() ? "0" : txtFaltasA.getText()));
-            jogo.setFaltasB(Integer.parseInt(txtFaltasB.getText().isBlank() ? "0" : txtFaltasB.getText()));
+            // 3. Gravar as restantes Estatísticas Técnicas
+            jogo.setRematesA(Integer.parseInt(txtRematesA.getText().isBlank() ? "0" : txtRematesA.getText().trim()));
+            jogo.setRematesB(Integer.parseInt(txtRematesB.getText().isBlank() ? "0" : txtRematesB.getText().trim()));
+            jogo.setCantosA(Integer.parseInt(txtCantosA.getText().isBlank() ? "0" : txtCantosA.getText().trim()));
+            jogo.setCantosB(Integer.parseInt(txtCantosB.getText().isBlank() ? "0" : txtCantosB.getText().trim()));
+            jogo.setFaltasA(Integer.parseInt(txtFaltasA.getText().isBlank() ? "0" : txtFaltasA.getText().trim()));
+            jogo.setFaltasB(Integer.parseInt(txtFaltasB.getText().isBlank() ? "0" : txtFaltasB.getText().trim()));
 
-            // 3. Recolher as linhas da tabela e guardar no jogo (Novo!)
+            // 4. Recolher as linhas da tabela e guardar no jogo
             List<String[]> listaEventosMemoria = new ArrayList<>();
             for (int i = 0; i < modeloTabelaEventos.getRowCount(); i++) {
                 String min = modeloTabelaEventos.getValueAt(i, 0).toString();
@@ -445,24 +447,38 @@ public class PainelResultados extends JPanel {
             JOptionPane.showMessageDialog(this, "Todos os dados do jogo foram persistidos com sucesso!");
 
         } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Erro: Certifique-se de que preencheu todos os campos técnicos com números.");
+            JOptionPane.showMessageDialog(this, "Erro: Certifique-se de que preencheu os campos obrigatórios (Golos) com números válidos.");
         }
     }
 
     private void modoEdicao(boolean editar) {
+        // Componentes antigos
         txtGolosA.setEnabled(editar);
         txtGolosB.setEnabled(editar);
         cbMOTM.setEnabled(editar);
+
+        // 🌟 NOVO: Controlar o estado das caixas de Estatísticas Técnicas
+        txtPosseA.setEditable(editar);
+        txtPosseB.setEditable(editar); // Como esta calcula automaticamente, podes deixar false ou editar
+        txtRematesA.setEditable(editar);
+        txtRematesB.setEditable(editar);
+        txtCantosA.setEditable(editar);
+        txtCantosB.setEditable(editar);
+        txtFaltasA.setEditable(editar);
+        txtFaltasB.setEditable(editar);
 
         // Controla a visibilidade dos botões de ação
         btnSubmeter.setVisible(editar);
         btnCancelar.setVisible(editar);
 
-        // O TRUQUE ESTÁ AQUI: O botão Editar deve aparecer SEMPRE que NÃO estivermos a editar!
+        // O botão Editar deve aparecer SEMPRE que NÃO estivermos a editar!
         btnEditar.setVisible(!editar);
 
         if (btnAdicionarEvento != null) {
             btnAdicionarEvento.setEnabled(editar);
+        }
+        if (btnApagarEvento != null) {
+            btnApagarEvento.setEnabled(editar);
         }
     }
 
