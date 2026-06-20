@@ -119,7 +119,8 @@ public class PainelClassificacao extends JPanel {
         tabela.getColumnModel().getColumn(8).setPreferredWidth(40);
         tabela.getColumnModel().getColumn(9).setPreferredWidth(40);
 
-        int alturaTabela = tabela.getRowHeight() * 4 + tabela.getTableHeader().getPreferredSize().height + 4;
+        // 🌟 OTIMIZADO: Ajustado para usar dados.length em vez de 4 fixo
+        int alturaTabela = tabela.getRowHeight() * Math.max(1, dados.length) + tabela.getTableHeader().getPreferredSize().height + 4;
         JScrollPane scroll = new JScrollPane(tabela);
         scroll.setPreferredSize(new Dimension(0, alturaTabela));
         scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
@@ -142,26 +143,31 @@ public class PainelClassificacao extends JPanel {
             }
         }
 
-        // 2. Computar o estado dos jogos reais usando os métodos do teu modelo oficial
+        // 2. Computar o estado dos jogos reais limpando a String do Grupo
         for (Jogo j : controller.getCalendarioJogos()) {
-            if (j != null && j.isConcluido() && j.getGrupo() != null && j.getGrupo().trim().equalsIgnoreCase(grupo)) {
+            if (j != null && j.isConcluido() && j.getGrupo() != null) {
 
-                Classificacao equipaA = obterLinhaModeloReal(linhas, j.getSelecaoA());
-                Classificacao equipaB = obterLinhaModeloReal(linhas, j.getSelecaoB());
+                // 🌟 CORREÇÃO: Remove a palavra "Grupo" para isolar apenas a Letra (ex: "Grupo F" -> "F")
+                String grupoJogoLimpo = j.getGrupo().toLowerCase().replace("grupo", "").trim();
 
-                if (equipaA != null && equipaB != null) {
-                    int gA = j.getGolosA();
-                    int gB = j.getGolosB();
+                if (grupoJogoLimpo.equalsIgnoreCase(grupo.trim())) {
+                    Classificacao equipaA = obterLinhaModeloReal(linhas, j.getSelecaoA());
+                    Classificacao equipaB = obterLinhaModeloReal(linhas, j.getSelecaoB());
 
-                    if (gA > gB) {
-                        equipaA.registarVitoria(gA, gB);
-                        equipaB.registarDerrota(gB, gA);
-                    } else if (gA < gB) {
-                        equipaB.registarVitoria(gB, gA);
-                        equipaA.registarDerrota(gA, gB);
-                    } else {
-                        equipaA.registarEmpate(gA, gB);
-                        equipaB.registarEmpate(gB, gA);
+                    if (equipaA != null && equipaB != null) {
+                        int gA = j.getGolosA();
+                        int gB = j.getGolosB();
+
+                        if (gA > gB) {
+                            equipaA.registarVitoria(gA, gB);
+                            equipaB.registarDerrota(gB, gA);
+                        } else if (gA < gB) {
+                            equipaB.registarVitoria(gB, gA);
+                            equipaA.registarDerrota(gA, gB);
+                        } else {
+                            equipaA.registarEmpate(gA, gB);
+                            equipaB.registarEmpate(gB, gA);
+                        }
                     }
                 }
             }
@@ -195,8 +201,12 @@ public class PainelClassificacao extends JPanel {
     }
 
     private Classificacao obterLinhaModeloReal(List<Classificacao> lista, String nomePais) {
+        if (nomePais == null) return null;
+
         for (Classificacao c : lista) {
-            if (c.getSelecao().getPais().trim().equalsIgnoreCase(nomePais.trim())) return c;
+            if (c.getSelecao().getPais().trim().equalsIgnoreCase(nomePais.trim())) {
+                return c;
+            }
         }
         return null;
     }
@@ -303,10 +313,9 @@ public class PainelClassificacao extends JPanel {
         if (marcadoresReais == null || marcadoresReais.isEmpty()) {
             pnlMarcadores.add(new JLabel("Sem golos registados."));
         } else {
-            int posicao = 1;
             for (String[] m : marcadoresReais) {
-                pnlMarcadores.add(criarLinhaRanking(posicao + ". " + m[0], m[1], m[2]));
-                posicao++;
+                // 🌟 CORRIGIDO: Passa apenas m[0] diretamente para evitar a numeração dupla
+                pnlMarcadores.add(criarLinhaRanking(m[0], m[1], m[2]));
             }
         }
 
@@ -326,10 +335,9 @@ public class PainelClassificacao extends JPanel {
         if (assistenciasReais == null || assistenciasReais.isEmpty()) {
             pnlAssistencias.add(new JLabel("Sem assistências."));
         } else {
-            int posicao = 1;
             for (String[] a : assistenciasReais) {
-                pnlAssistencias.add(criarLinhaRanking(posicao + ". " + a[0], a[1], a[2]));
-                posicao++;
+                // 🌟 CORRIGIDO: Passa apenas a[0] diretamente para evitar a numeração dupla
+                pnlAssistencias.add(criarLinhaRanking(a[0], a[1], a[2]));
             }
         }
 
