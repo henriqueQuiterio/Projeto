@@ -301,10 +301,6 @@ public class MundialController {
         return jogadorCompleto.substring(inicio + 1, fim).trim();
     }
 
-    // =========================
-    // Gestão de Bilhetes e Estádios
-    // =========================
-
     public List<Estadio> getEstadios() {
         return new ArrayList<>(estadios);
     }
@@ -393,11 +389,6 @@ public class MundialController {
         }
         return ocupados;
     }
-
-
-    // =========================
-    // Gestão de Calendário / Arbitragem
-    // =========================
 
     public void adicionarJogo(Jogo jogo) {
         this.calendarioJogos.add(jogo);
