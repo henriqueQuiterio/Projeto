@@ -53,7 +53,7 @@ public class PainelResultados extends JPanel {
         this.btnCancelar = canc;
         this.btnAdicionarEvento = null; // Capturado dinamicamente via SwingUtilities no configurarEventos()
 
-        this.btnApagarEvento.addActionListener(e -> apagarEventoSelecionado());
+        //this.btnApagarEvento.addActionListener(e -> apagarEventoSelecionado());
 
         // 4. Inicialização e acoplamento do modelo seguro da Tabela de Eventos
         this.tabelaEventos = tabEventos;
@@ -148,17 +148,14 @@ public class PainelResultados extends JPanel {
                             + "</html>";
 
                     label.setText(textoHtml);
-
-                    // Margem interna para o espaçamento vertical respirar bem
                     label.setBorder(BorderFactory.createEmptyBorder(8, 12, 8, 12));
                 }
 
                 return label;
             }
         });
-        // =========================================================================
 
-        // O teu código antigo continua exatamente igual aqui para baixo:
+        // Listeners do modelo e ações estáticas
         listaJogos.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting() && listaJogos.getSelectedValue() != null) {
                 atualizarInterface(listaJogos.getSelectedValue());
@@ -174,17 +171,21 @@ public class PainelResultados extends JPanel {
 
         txtPosseA.addActionListener(e -> calcularPosse());
 
+        // 🌟 INJEÇÃO LIMPA E DIRETA DOS COMPONENTES DO FORMULÁRIO
         SwingUtilities.invokeLater(() -> {
             Component topo = SwingUtilities.getWindowAncestor(listaJogos);
             if (topo instanceof JanelaMundial) {
                 JanelaMundial janela = (JanelaMundial) topo;
-                this.btnAdicionarEvento = janela.btnAdicionarEvento;
 
+                // Vincula diretamente as referências dos botões reais do .form
+                this.btnAdicionarEvento = janela.btnAdicionarEvento;
+                this.btnApagarEvento = janela.btnApagarEvento;
+
+                // --- CONFIGURAÇÃO DO BOTÃO ADICIONAR REAL ---
                 if (this.btnAdicionarEvento != null) {
                     for (java.awt.event.ActionListener al : this.btnAdicionarEvento.getActionListeners()) {
                         this.btnAdicionarEvento.removeActionListener(al);
                     }
-
                     this.btnAdicionarEvento.addActionListener(evt -> {
                         Jogo jogoSelecionado = listaJogos.getSelectedValue();
                         if (jogoSelecionado == null) {
@@ -201,11 +202,27 @@ public class PainelResultados extends JPanel {
                                 JOptionPane.QUESTION_MESSAGE, null, tipos, tipos[0]);
                         if (tipoSelecionado == null) return;
 
+                        // Filtragem por aproximação para carregar os jogadores em segurança
                         ArrayList<String> jogadoresDisponiveis = new ArrayList<>();
                         for (Selecao s : controller.getSelecoes()) {
-                            if (s.getPais().equals(jogoSelecionado.getSelecaoA()) || s.getPais().equals(jogoSelecionado.getSelecaoB())) {
-                                for (Jogador j : s.getJogadores()) {
-                                    jogadoresDisponiveis.add(j.getNome() + " (" + s.getPais() + ")");
+                            if (s.getPais() != null && jogoSelecionado.getSelecaoA() != null && jogoSelecionado.getSelecaoB() != null) {
+
+                                String paisSelecao = s.getPais().toLowerCase().trim();
+                                String jogoSelecaoA = jogoSelecionado.getSelecaoA().toLowerCase().trim();
+                                String jogoSelecaoB = jogoSelecionado.getSelecaoB().toLowerCase().trim();
+
+                                boolean correspondeA = jogoSelecaoA.contains(paisSelecao) || paisSelecao.contains(jogoSelecaoA)
+                                        || (paisSelecao.contains("chéquia") && jogoSelecaoA.contains("tchéquia"))
+                                        || (paisSelecao.contains("coreia") && jogoSelecaoA.contains("coreia"));
+
+                                boolean correspondeB = jogoSelecaoB.contains(paisSelecao) || paisSelecao.contains(jogoSelecaoB)
+                                        || (paisSelecao.contains("chéquia") && jogoSelecaoB.contains("tchéquia"))
+                                        || (paisSelecao.contains("coreia") && jogoSelecaoB.contains("coreia"));
+
+                                if (correspondeA || correspondeB) {
+                                    for (Jogador j : s.getJogadores()) {
+                                        jogadoresDisponiveis.add(j.getNome() + " (" + s.getPais() + ")");
+                                    }
                                 }
                             }
                         }
@@ -216,11 +233,9 @@ public class PainelResultados extends JPanel {
                         }
 
                         if (tipoSelecionado.equals("Substituição")) {
-                            // 1. Jogador que SAI
                             String sai = (String) JOptionPane.showInputDialog(this, "Selecione o jogador que SAI:", "Substituição (SAI)",
                                     JOptionPane.QUESTION_MESSAGE, null, jogadoresDisponiveis.toArray(), null);
 
-                            // 2. Jogador que ENTRA
                             String entra = (String) JOptionPane.showInputDialog(this, "Selecione o jogador que ENTRA:", "Substituição (ENTRA)",
                                     JOptionPane.QUESTION_MESSAGE, null, jogadoresDisponiveis.toArray(), null);
 
@@ -232,92 +247,107 @@ public class PainelResultados extends JPanel {
                                 }
                             }
                         } else if (tipoSelecionado.equals("Golo")) {
-                            String marcador = (String) JOptionPane.showInputDialog(
-                                    this,
-                                    "Selecione o marcador do golo:",
-                                    "Marcador",
-                                    JOptionPane.QUESTION_MESSAGE,
-                                    null,
-                                    jogadoresDisponiveis.toArray(new String[0]),
-                                    jogadoresDisponiveis.get(0)
-                            );
+                            // 1. Perguntar se foi Golo Normal ou Autogolo
+                            String[] subTiposGolo = {"Golo Normal", "Autogolo"};
+                            String tipoGolo = (String) JOptionPane.showInputDialog(this,
+                                    "Selecione o tipo de golo:", "Tipo de Golo",
+                                    JOptionPane.QUESTION_MESSAGE, null, subTiposGolo, subTiposGolo[0]);
+                            if (tipoGolo == null) return;
 
-                            if (marcador == null) {
+                            // 2. Dar a escolher qual das duas equipas marcou/cometeu o lance
+                            String[] equipasDoJogo = {jogoSelecionado.getSelecaoA(), jogoSelecionado.getSelecaoB()};
+                            String equipaSelecionada = (String) JOptionPane.showInputDialog(this,
+                                    tipoGolo.equals("Golo Normal") ? "Qual é a equipa que marcou o golo?" : "Qual é a equipa que sofreu o autogolo?",
+                                    "Selecionar Equipa", JOptionPane.QUESTION_MESSAGE, null, equipasDoJogo, equipasDoJogo[0]);
+                            if (equipaSelecionada == null) return;
+
+                            // 3. Filtrar os jogadores APENAS da equipa escolhida
+                            ArrayList<String> jogadoresFiltrados = new ArrayList<>();
+                            String nomeEquipaBusca = equipaSelecionada.toLowerCase().trim();
+
+                            for (Selecao s : controller.getSelecoes()) {
+                                if (s.getPais() != null) {
+                                    String paisSelecao = s.getPais().toLowerCase().trim();
+
+                                    // Verificação flexível de nomes (Chéquia, Coreia, etc.)
+                                    boolean eAMesmaEquipa = nomeEquipaBusca.contains(paisSelecao) || paisSelecao.contains(nomeEquipaBusca)
+                                            || (paisSelecao.contains("chéquia") && nomeEquipaBusca.contains("tchéquia"))
+                                            || (paisSelecao.contains("coreia") && nomeEquipaBusca.contains("coreia"));
+
+                                    if (eAMesmaEquipa) {
+                                        for (Jogador j : s.getJogadores()) {
+                                            jogadoresFiltrados.add(j.getNome() + " (" + s.getPais() + ")");
+                                        }
+                                        break; // Já encontrou a equipa certa, pode parar o loop das seleções
+                                    }
+                                }
+                            }
+
+                            if (jogadoresFiltrados.isEmpty()) {
+                                JOptionPane.showMessageDialog(this, "Não foram encontrados jogadores registados para a seleção: " + equipaSelecionada);
                                 return;
                             }
 
-                            ArrayList<String> opcoesAssistencia = new ArrayList<>();
-                            opcoesAssistencia.add("Sem assistência");
-                            opcoesAssistencia.addAll(jogadoresDisponiveis);
-
-                            String assistente = (String) JOptionPane.showInputDialog(
-                                    this,
-                                    "Selecione o assistente:",
-                                    "Assistência",
-                                    JOptionPane.QUESTION_MESSAGE,
-                                    null,
-                                    opcoesAssistencia.toArray(new String[0]),
-                                    opcoesAssistencia.get(0)
-                            );
+                            // 4. Selecionar o Jogador da lista restrita
+                            String marcador = (String) JOptionPane.showInputDialog(this,
+                                    tipoGolo.equals("Golo Normal") ? "Selecione o marcador do golo:" : "Selecione o jogador que cometeu o autogolo:",
+                                    "Marcador", JOptionPane.QUESTION_MESSAGE, null,
+                                    jogadoresFiltrados.toArray(new String[0]), jogadoresFiltrados.get(0));
+                            if (marcador == null) return;
 
                             String detalhe;
+                            if (tipoGolo.equals("Golo Normal")) {
+                                // Menu de assistências (apenas com jogadores da mesma equipa para fazer sentido!)
+                                ArrayList<String> opcoesAssistencia = new ArrayList<>();
+                                opcoesAssistencia.add("Sem assistência");
+                                opcoesAssistencia.addAll(jogadoresFiltrados);
 
-                            if (assistente == null || assistente.equals("Sem assistência")) {
-                                detalhe = marcador;
-                            } else {
-                                if (assistente.equals(marcador)) {
-                                    JOptionPane.showMessageDialog(this, "O assistente não pode ser o próprio marcador.");
-                                    return;
+                                String assistente = (String) JOptionPane.showInputDialog(this, "Selecione o assistente:", "Assistência",
+                                        JOptionPane.QUESTION_MESSAGE, null, opcoesAssistencia.toArray(new String[0]), opcoesAssistencia.get(0));
+
+                                if (assistente == null || assistente.equals("Sem assistência")) {
+                                    detalhe = marcador;
+                                } else {
+                                    if (assistente.equals(marcador)) {
+                                        JOptionPane.showMessageDialog(this, "O assistente não pode ser o próprio marcador.");
+                                        return;
+                                    }
+                                    detalhe = marcador + " | Assist: " + assistente;
                                 }
-
-                                detalhe = marcador + " | Assist: " + assistente;
-                            }
-
-                            modeloTabelaEventos.addRow(new Object[]{minuto + "'", "Golo", detalhe});
-
-                        } else {
-                            String jogadorSelecionado = (String) JOptionPane.showInputDialog(
-                                    this,
-                                    "Selecione o Jogador envolvido:",
-                                    "Jogador",
-                                    JOptionPane.QUESTION_MESSAGE,
-                                    null,
-                                    jogadoresDisponiveis.toArray(new String[0]),
-                                    jogadoresDisponiveis.get(0)
-                            );
-
-                            if (jogadorSelecionado != null) {
-                                modeloTabelaEventos.addRow(new Object[]{minuto + "'", tipoSelecionado, jogadorSelecionado});
+                                modeloTabelaEventos.addRow(new Object[]{minuto + "'", "Golo", detalhe});
+                            } else {
+                                // É Autogolo
+                                detalhe = marcador + " (Autogolo)";
+                                modeloTabelaEventos.addRow(new Object[]{minuto + "'", "Autogolo", detalhe});
                             }
                         }
                     });
                 }
 
-                JButton btnApagar = janela.btnApagarEvento;
-
-                if (btnApagar != null) {
-                    // Limpa listeners antigos para não duplicar
-                    for (java.awt.event.ActionListener al : btnApagar.getActionListeners()) {
-                        btnApagar.removeActionListener(al);
+                // --- CONFIGURAÇÃO DO BOTÃO APAGAR REAL ---
+                if (this.btnApagarEvento != null) {
+                    for (java.awt.event.ActionListener al : this.btnApagarEvento.getActionListeners()) {
+                        this.btnApagarEvento.removeActionListener(al);
                     }
-                    // Adiciona a nova lógica
-                    btnApagar.addActionListener(e -> apagarEventoSelecionado());
+                    this.btnApagarEvento.addActionListener(e -> apagarEventoSelecionado());
                 }
-
             }
         });
     }
 
-    // Adiciona este método dentro da classe PainelResultados
     private void apagarEventoSelecionado() {
-        int linhaSelecionada = tabelaEventos.getSelectedRow();
+        Jogo jogoSelecionado = listaJogos.getSelectedValue();
+        if (jogoSelecionado == null) {
+            JOptionPane.showMessageDialog(this, "Por favor, selecione um jogo primeiro.");
+            return;
+        }
 
+        int linhaSelecionada = tabelaEventos.getSelectedRow();
         if (linhaSelecionada == -1) {
             JOptionPane.showMessageDialog(this, "Por favor, selecione uma linha na tabela para apagar.");
             return;
         }
 
-        // Converter o índice da vista para o índice do modelo (importante se tiveres sorting na tabela)
         int modeloIndex = tabelaEventos.convertRowIndexToModel(linhaSelecionada);
 
         int resposta = JOptionPane.showConfirmDialog(this,
@@ -326,7 +356,33 @@ public class PainelResultados extends JPanel {
                 JOptionPane.YES_NO_OPTION);
 
         if (resposta == JOptionPane.YES_OPTION) {
+            // 1. Remove da JTable (Vista)
             modeloTabelaEventos.removeRow(modeloIndex);
+
+            // 2. Reconstrói a lista de eventos atualizada em memória para o Jogo
+            List<String[]> listaEventosMemoria = new ArrayList<>();
+            for (int i = 0; i < modeloTabelaEventos.getRowCount(); i++) {
+                String min = modeloTabelaEventos.getValueAt(i, 0).toString();
+                String tipo = modeloTabelaEventos.getValueAt(i, 1).toString();
+                String det = modeloTabelaEventos.getValueAt(i, 2).toString();
+                listaEventosMemoria.add(new String[]{min, tipo, det});
+            }
+            jogoSelecionado.setEventosDoJogo(listaEventosMemoria);
+
+            // 3. Persiste IMEDIATAMENTE a alteração no ficheiro binário .dat
+            controller.guardarDados();
+
+            // 4. Notifica as outras abas para se redesenharem (incluindo os golos/assistências)
+            if (painelCalendarioRef != null) {
+                painelCalendarioRef.carregarEOrdenarCartoes();
+            }
+
+            Component topo = SwingUtilities.getWindowAncestor(listaJogos);
+            if (topo instanceof JanelaMundial) {
+                ((JanelaMundial) topo).atualizarAbaClassificacao(); // Força o refresh dos Rankings!
+            }
+
+            JOptionPane.showMessageDialog(this, "Evento apagado e guardado no ficheiro com sucesso!");
         }
     }
 
