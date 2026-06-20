@@ -1,31 +1,22 @@
 package pt.ipleiria.estg.dei.ei.esoft.view;
 
 import pt.ipleiria.estg.dei.ei.esoft.control.MundialController;
+import pt.ipleiria.estg.dei.ei.esoft.model.Classificacao;
+import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
+import pt.ipleiria.estg.dei.ei.esoft.model.Selecao;
 
-import javax.swing.BorderFactory;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.JButton;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTable;
-import javax.swing.SwingConstants;
+import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
-import java.awt.BorderLayout;
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.FlowLayout;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 public class PainelClassificacao extends JPanel {
 
     private final MundialController controller;
-
     private JPanel painelConteudo;
+    private JPanel painelDireitoRankings;
     private JButton btnAlternarVista;
     private boolean mostrarFaseFinal;
 
@@ -37,7 +28,7 @@ public class PainelClassificacao extends JPanel {
         setBorder(BorderFactory.createEmptyBorder(12, 12, 12, 12));
 
         criarInterface();
-        mostrarGrupos();
+        atualizarInterfaceDinamica();
     }
 
     private void criarInterface() {
@@ -51,62 +42,43 @@ public class PainelClassificacao extends JPanel {
         JScrollPane scrollConteudo = new JScrollPane(painelConteudo);
         scrollConteudo.setBorder(null);
 
-        JPanel painelDireito = criarPainelRankings();
+        painelDireitoRankings = new JPanel();
+        painelDireitoRankings.setLayout(new BoxLayout(painelDireitoRankings, BoxLayout.Y_AXIS));
+        painelDireitoRankings.setPreferredSize(new Dimension(280, 0));
 
         add(painelTopo, BorderLayout.NORTH);
         add(scrollConteudo, BorderLayout.CENTER);
-        add(painelDireito, BorderLayout.EAST);
+        add(painelDireitoRankings, BorderLayout.EAST);
 
         btnAlternarVista.addActionListener(e -> alternarVista());
     }
 
-    private void alternarVista() {
+    public void atualizarInterfaceDinamica() {
+        configurarPainelDireitoRankings();
+
         if (mostrarFaseFinal) {
-            mostrarGrupos();
-        } else {
             mostrarFaseFinal();
+        } else {
+            mostrarGrupos();
         }
     }
 
-    private void mostrarGrupos() {
-        mostrarFaseFinal = false;
-        btnAlternarVista.setText("VER FASE FINAL");
+    private void alternarVista() {
+        mostrarFaseFinal = !mostrarFaseFinal;
+        atualizarInterfaceDinamica();
+    }
 
+    private void mostrarGrupos() {
+        btnAlternarVista.setText("VER FASE FINAL");
         painelConteudo.removeAll();
 
-        painelConteudo.add(criarPainelGrupo(
-                "Grupo A",
-                new Object[][]{
-                        {1, "PT  Portugal", 3, 2, 1, 0, 7, 2, "+5", 7},
-                        {2, "GH  Gana", 3, 1, 2, 0, 5, 3, "+2", 5},
-                        {3, "UY  Uruguai", 3, 1, 1, 1, 4, 4, "0", 4},
-                        {4, "KR  Coreia do Sul", 3, 0, 0, 3, 2, 9, "-7", 0}
-                }
-        ));
+        String[] grupos = {"A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"};
 
-        painelConteudo.add(Box.createVerticalStrut(12));
-
-        painelConteudo.add(criarPainelGrupo(
-                "Grupo B",
-                new Object[][]{
-                        {1, "BR  Brasil", 3, 3, 0, 0, 8, 1, "+7", 9},
-                        {2, "CH  Suíça", 3, 2, 0, 1, 5, 4, "+1", 6},
-                        {3, "CM  Camarões", 3, 1, 0, 2, 4, 5, "-1", 3},
-                        {4, "RS  Sérvia", 3, 0, 0, 3, 2, 9, "-7", 0}
-                }
-        ));
-
-        painelConteudo.add(Box.createVerticalStrut(12));
-
-        painelConteudo.add(criarPainelGrupo(
-                "Grupo C",
-                new Object[][]{
-                        {1, "FR  França", 3, 2, 0, 1, 6, 3, "+3", 6},
-                        {2, "AR  Argentina", 3, 2, 0, 1, 5, 3, "+2", 6},
-                        {3, "ES  Espanha", 3, 1, 1, 1, 4, 4, "0", 4},
-                        {4, "MA  Marrocos", 3, 0, 1, 2, 2, 7, "-5", 1}
-                }
-        ));
+        for (String g : grupos) {
+            Object[][] dadosDoGrupo = calcularDadosGrupoReal(g);
+            painelConteudo.add(criarPainelGrupo("Grupo " + g, dadosDoGrupo));
+            painelConteudo.add(Box.createVerticalStrut(12));
+        }
 
         painelConteudo.revalidate();
         painelConteudo.repaint();
@@ -120,7 +92,7 @@ public class PainelClassificacao extends JPanel {
         ));
 
         JLabel lblTitulo = new JLabel(titulo);
-        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        lblTitulo.setFont(new Font("Segoe UI", Font.BOLD, 15));
 
         String[] colunas = {"Pos", "Seleção", "J", "V", "E", "D", "GM", "GS", "DG", "Pts"};
 
@@ -132,30 +104,105 @@ public class PainelClassificacao extends JPanel {
         };
 
         JTable tabela = new JTable(modelo);
-        tabela.setRowHeight(26);
+        tabela.setRowHeight(25);
         tabela.getTableHeader().setReorderingAllowed(false);
+        tabela.setFont(new Font("Segoe UI", Font.PLAIN, 12));
 
-        tabela.getColumnModel().getColumn(0).setPreferredWidth(40);
-        tabela.getColumnModel().getColumn(1).setPreferredWidth(180);
+        tabela.getColumnModel().getColumn(0).setPreferredWidth(35);
+        tabela.getColumnModel().getColumn(1).setPreferredWidth(160);
         tabela.getColumnModel().getColumn(2).setPreferredWidth(35);
         tabela.getColumnModel().getColumn(3).setPreferredWidth(35);
         tabela.getColumnModel().getColumn(4).setPreferredWidth(35);
         tabela.getColumnModel().getColumn(5).setPreferredWidth(35);
-        tabela.getColumnModel().getColumn(6).setPreferredWidth(45);
-        tabela.getColumnModel().getColumn(7).setPreferredWidth(45);
-        tabela.getColumnModel().getColumn(8).setPreferredWidth(45);
-        tabela.getColumnModel().getColumn(9).setPreferredWidth(45);
+        tabela.getColumnModel().getColumn(6).setPreferredWidth(40);
+        tabela.getColumnModel().getColumn(7).setPreferredWidth(40);
+        tabela.getColumnModel().getColumn(8).setPreferredWidth(40);
+        tabela.getColumnModel().getColumn(9).setPreferredWidth(40);
+
+        int alturaTabela = tabela.getRowHeight() * 4 + tabela.getTableHeader().getPreferredSize().height + 4;
+        JScrollPane scroll = new JScrollPane(tabela);
+        scroll.setPreferredSize(new Dimension(0, alturaTabela));
+        scroll.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
+        scroll.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        scroll.setBorder(null);
 
         painel.add(lblTitulo, BorderLayout.NORTH);
-        painel.add(tabela, BorderLayout.CENTER);
+        painel.add(scroll, BorderLayout.CENTER);
 
         return painel;
     }
 
-    private void mostrarFaseFinal() {
-        mostrarFaseFinal = true;
-        btnAlternarVista.setText("VER GRUPOS");
+    private Object[][] calcularDadosGrupoReal(String grupo) {
+        List<Classificacao> linhas = new ArrayList<>();
 
+        // 1. Filtrar as seleções pertencentes a este grupo
+        for (Selecao s : controller.getSelecoes()) {
+            if (s.getGrupo() != null && s.getGrupo().trim().equalsIgnoreCase(grupo)) {
+                linhas.add(new Classificacao(s));
+            }
+        }
+
+        // 2. Computar o estado dos jogos reais usando os métodos do teu modelo oficial
+        for (Jogo j : controller.getCalendarioJogos()) {
+            if (j != null && j.isConcluido() && j.getGrupo() != null && j.getGrupo().trim().equalsIgnoreCase(grupo)) {
+
+                Classificacao equipaA = obterLinhaModeloReal(linhas, j.getSelecaoA());
+                Classificacao equipaB = obterLinhaModeloReal(linhas, j.getSelecaoB());
+
+                if (equipaA != null && equipaB != null) {
+                    int gA = j.getGolosA();
+                    int gB = j.getGolosB();
+
+                    if (gA > gB) {
+                        equipaA.registarVitoria(gA, gB);
+                        equipaB.registarDerrota(gB, gA);
+                    } else if (gA < gB) {
+                        equipaB.registarVitoria(gB, gA);
+                        equipaA.registarDerrota(gA, gB);
+                    } else {
+                        equipaA.registarEmpate(gA, gB);
+                        equipaB.registarEmpate(gB, gA);
+                    }
+                }
+            }
+        }
+
+        // 3. Ordenar pelos critérios oficiais da FIFA (Pts -> DG -> GM -> Nome do País)
+        linhas.sort(Comparator.comparingInt(Classificacao::getPontos).reversed()
+                .thenComparing(Comparator.comparingInt(Classificacao::getDiferencaGolos).reversed())
+                .thenComparing(Comparator.comparingInt(Classificacao::getGolosMarcados).reversed())
+                .thenComparing(c -> c.getSelecao().getPais()));
+
+        // 4. Montar a matriz bidimensional de objetos para a JTable
+        Object[][] matriz = new Object[linhas.size()][10];
+        for (int i = 0; i < linhas.size(); i++) {
+            Classificacao c = linhas.get(i);
+            int dg = c.getDiferencaGolos();
+            matriz[i] = new Object[]{
+                    (i + 1),
+                    c.getSelecao().getPais(),
+                    c.getJogos(),
+                    c.getVitorias(),
+                    c.getEmpates(),
+                    c.getDerrotas(),
+                    c.getGolosMarcados(),
+                    c.getGolosSofridos(),
+                    (dg > 0 ? "+" + dg : dg),
+                    c.getPontos()
+            };
+        }
+        return matriz;
+    }
+
+    private Classificacao obterLinhaModeloReal(List<Classificacao> lista, String nomePais) {
+        for (Classificacao c : lista) {
+            if (c.getSelecao().getPais().trim().equalsIgnoreCase(nomePais.trim())) return c;
+        }
+        return null;
+    }
+
+    private void mostrarFaseFinal() {
+        btnAlternarVista.setText("VER GRUPOS");
         painelConteudo.removeAll();
 
         JPanel painel = new JPanel(new BorderLayout(10, 10));
@@ -164,7 +211,7 @@ public class PainelClassificacao extends JPanel {
                 BorderFactory.createEmptyBorder(18, 18, 18, 18)
         ));
 
-        JLabel titulo = new JLabel("Fase Final - Eliminatórias");
+        JLabel titulo = new JLabel("Fase Final - Árvore do Torneio");
         titulo.setFont(new Font("Segoe UI", Font.BOLD, 16));
 
         JPanel bracket = new JPanel(new GridBagLayout());
@@ -177,35 +224,53 @@ public class PainelClassificacao extends JPanel {
         adicionarCabecalhoBracket(bracket, c, 2, "Meias-Finais");
         adicionarCabecalhoBracket(bracket, c, 3, "Final");
 
-        adicionarJogoBracket(bracket, c, 0, 1, "Portugal vs Suíça");
-        adicionarJogoBracket(bracket, c, 0, 2, "Brasil vs Gana");
-        adicionarJogoBracket(bracket, c, 0, 3, "França vs Argentina");
-        adicionarJogoBracket(bracket, c, 0, 4, "Espanha vs Alemanha");
-
-        adicionarJogoBracket(bracket, c, 1, 2, "Portugal vs Brasil");
-        adicionarJogoBracket(bracket, c, 1, 4, "França vs Espanha");
-
-        adicionarJogoBracket(bracket, c, 2, 3, "Portugal vs França");
-
-        JButton finalBtn = new JButton("🏆 TBD");
-        finalBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        c.gridx = 3;
-        c.gridy = 3;
-        bracket.add(finalBtn, c);
+        injetarJogosFaseFinalBracket(bracket, c);
 
         painel.add(titulo, BorderLayout.NORTH);
         painel.add(bracket, BorderLayout.CENTER);
-
         painelConteudo.add(painel);
 
         painelConteudo.revalidate();
         painelConteudo.repaint();
     }
 
+    private void injetarJogosFaseFinalBracket(JPanel bracket, GridBagConstraints c) {
+        adicionarJogoBracket(bracket, c, 0, 1, obterTextoJogoFaseReal("Oitavas de final", 0));
+        adicionarJogoBracket(bracket, c, 0, 2, obterTextoJogoFaseReal("Oitavas de final", 1));
+        adicionarJogoBracket(bracket, c, 0, 3, obterTextoJogoFaseReal("Oitavas de final", 2));
+        adicionarJogoBracket(bracket, c, 0, 4, obterTextoJogoFaseReal("Oitavas de final", 3));
+
+        adicionarJogoBracket(bracket, c, 1, 2, obterTextoJogoFaseReal("Quartas de final", 0));
+        adicionarJogoBracket(bracket, c, 1, 4, obterTextoJogoFaseReal("Quartas de final", 1));
+
+        adicionarJogoBracket(bracket, c, 2, 3, obterTextoJogoFaseReal("Semifinal", 0));
+
+        JButton finalBtn = new JButton(obterTextoJogoFaseReal("Final", 0));
+        finalBtn.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        c.gridx = 3;
+        c.gridy = 3;
+        bracket.add(finalBtn, c);
+    }
+
+    private String obterTextoJogoFaseReal(String fase, int indice) {
+        int conta = 0;
+        for (Jogo j : controller.getCalendarioJogos()) {
+            if (j.getFase() != null && j.getFase().trim().equalsIgnoreCase(fase)) {
+                if (conta == indice) {
+                    if (j.isConcluido()) {
+                        return j.getSelecaoA() + " (" + j.getGolosA() + ") vs (" + j.getGolosB() + ") " + j.getSelecaoB();
+                    }
+                    return j.getSelecaoA() + " vs " + j.getSelecaoB();
+                }
+                conta++;
+            }
+        }
+        return "TBD (A definir)";
+    }
+
     private void adicionarCabecalhoBracket(JPanel painel, GridBagConstraints c, int coluna, String texto) {
         JLabel label = new JLabel(texto, SwingConstants.CENTER);
-        label.setFont(new Font("Segoe UI", Font.PLAIN, 12));
-
+        label.setFont(new Font("Segoe UI", Font.BOLD, 13));
         c.gridx = coluna;
         c.gridy = 0;
         painel.add(label, c);
@@ -214,71 +279,71 @@ public class PainelClassificacao extends JPanel {
     private void adicionarJogoBracket(JPanel painel, GridBagConstraints c, int coluna, int linha, String texto) {
         JButton botao = new JButton(texto);
         botao.setFocusable(false);
-
         c.gridx = coluna;
         c.gridy = linha;
         painel.add(botao, c);
     }
 
-    private JPanel criarPainelRankings() {
-        JPanel painel = new JPanel();
-        painel.setLayout(new BoxLayout(painel, BoxLayout.Y_AXIS));
-        painel.setPreferredSize(new Dimension(260, 0));
+    private void configurarPainelDireitoRankings() {
+        painelDireitoRankings.removeAll();
 
-        painel.add(criarPainelMelhoresMarcadores());
-        painel.add(Box.createVerticalStrut(12));
-        painel.add(criarPainelAssistencias());
-
-        return painel;
-    }
-
-    private JPanel criarPainelMelhoresMarcadores() {
-        JPanel painel = new JPanel();
-        painel.setLayout(new BoxLayout(painel, BoxLayout.Y_AXIS));
-        painel.setBorder(BorderFactory.createCompoundBorder(
+        // 1. Bloco de Marcadores Reais
+        JPanel pnlMarcadores = new JPanel();
+        pnlMarcadores.setLayout(new BoxLayout(pnlMarcadores, BoxLayout.Y_AXIS));
+        pnlMarcadores.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220)),
                 BorderFactory.createEmptyBorder(14, 14, 14, 14)
         ));
+        JLabel lblT1 = new JLabel("Melhores Marcadores");
+        lblT1.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        pnlMarcadores.add(lblT1);
+        pnlMarcadores.add(Box.createVerticalStrut(10));
 
-        JLabel titulo = new JLabel("Melhores Marcadores");
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        painel.add(titulo);
-        painel.add(Box.createVerticalStrut(12));
+        List<String[]> marcadoresReais = controller.getMelhoresMarcadoresPorEventos();
+        if (marcadoresReais == null || marcadoresReais.isEmpty()) {
+            pnlMarcadores.add(new JLabel("Sem golos registados."));
+        } else {
+            int posicao = 1;
+            for (String[] m : marcadoresReais) {
+                pnlMarcadores.add(criarLinhaRanking(posicao + ". " + m[0], m[1], m[2]));
+                posicao++;
+            }
+        }
 
-        painel.add(criarLinhaRanking("1. Cristiano Ronaldo", "Portugal", "5"));
-        painel.add(criarLinhaRanking("2. Neymar Jr.", "Brasil", "4"));
-        painel.add(criarLinhaRanking("3. Kylian Mbappé", "França", "4"));
-        painel.add(criarLinhaRanking("4. Lionel Messi", "Argentina", "3"));
-        painel.add(criarLinhaRanking("5. Harry Kane", "Inglaterra", "3"));
-
-        return painel;
-    }
-
-    private JPanel criarPainelAssistencias() {
-        JPanel painel = new JPanel();
-        painel.setLayout(new BoxLayout(painel, BoxLayout.Y_AXIS));
-        painel.setBorder(BorderFactory.createCompoundBorder(
+        // 2. Bloco de Assistências Reais
+        JPanel pnlAssistencias = new JPanel();
+        pnlAssistencias.setLayout(new BoxLayout(pnlAssistencias, BoxLayout.Y_AXIS));
+        pnlAssistencias.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(new Color(220, 220, 220)),
                 BorderFactory.createEmptyBorder(14, 14, 14, 14)
         ));
+        JLabel lblT2 = new JLabel("Líderes de Assistências");
+        lblT2.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        pnlAssistencias.add(lblT2);
+        pnlAssistencias.add(Box.createVerticalStrut(10));
 
-        JLabel titulo = new JLabel("Líderes de Assistências");
-        titulo.setFont(new Font("Segoe UI", Font.BOLD, 15));
-        painel.add(titulo);
-        painel.add(Box.createVerticalStrut(12));
+        List<String[]> assistenciasReais = controller.getLideresAssistenciasPorEventos();
+        if (assistenciasReais == null || assistenciasReais.isEmpty()) {
+            pnlAssistencias.add(new JLabel("Sem assistências."));
+        } else {
+            int posicao = 1;
+            for (String[] a : assistenciasReais) {
+                pnlAssistencias.add(criarLinhaRanking(posicao + ". " + a[0], a[1], a[2]));
+                posicao++;
+            }
+        }
 
-        painel.add(criarLinhaRanking("1. Bruno Fernandes", "Portugal", "4"));
-        painel.add(criarLinhaRanking("2. Kevin De Bruyne", "Bélgica", "3"));
-        painel.add(criarLinhaRanking("3. Lionel Messi", "Argentina", "3"));
-        painel.add(criarLinhaRanking("4. Luka Modrić", "Croácia", "2"));
-        painel.add(criarLinhaRanking("5. Antoine Griezmann", "França", "2"));
+        painelDireitoRankings.add(pnlMarcadores);
+        painelDireitoRankings.add(Box.createVerticalStrut(12));
+        painelDireitoRankings.add(pnlAssistencias);
 
-        return painel;
+        painelDireitoRankings.revalidate();
+        painelDireitoRankings.repaint();
     }
 
     private JPanel criarLinhaRanking(String nome, String selecao, String valor) {
         JPanel linha = new JPanel(new BorderLayout());
-        linha.setMaximumSize(new Dimension(Integer.MAX_VALUE, 42));
+        linha.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         JPanel textos = new JPanel();
         textos.setLayout(new BoxLayout(textos, BoxLayout.Y_AXIS));
