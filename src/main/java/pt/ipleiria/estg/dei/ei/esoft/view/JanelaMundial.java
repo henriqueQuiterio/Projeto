@@ -61,6 +61,7 @@ public class JanelaMundial extends JFrame {
     private JTextField txtGolosB;
     JLabel lblSiglaB;
     JButton btnAdicionarEvento;
+    JButton btnApagarEvento;
     private JTable tabelaEventos;
     JLabel lblEstatisticaA;
     JLabel lblEstatisticaB;
@@ -102,7 +103,7 @@ public class JanelaMundial extends JFrame {
         PainelResultados abaResultadosLogica = new PainelResultados(controller,
                 listaJogosResultados, txtGolosA, txtGolosB, txtPosseA, txtPosseB,
                 txtRematesA, txtRematesB, txtCantosA, txtCantosB, txtFaltasA, txtFaltasB,
-                cbMOTM, btnSubmeter, btnEditar, btnCancelarAlteracoes, tabelaEventos, abaCalendarioLimpa);
+                cbMOTM, btnSubmeter, btnEditar, btnCancelarAlteracoes, tabelaEventos, abaCalendarioLimpa, btnApagarEvento);
 
         // 2. Acoplar ao TabbedPane do ecrã
         abasPrincipais.removeAll(); // Limpa as abas em branco padrão do editor gráfico

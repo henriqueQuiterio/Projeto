@@ -24,18 +24,20 @@ public class PainelResultados extends JPanel {
     private DefaultTableModel modeloTabelaEventos;
     private PainelCalendario painelCalendarioRef;
     private JButton btnAdicionarEvento;
+    private JButton btnApagarEvento;
 
     public PainelResultados(MundialController controller, JList<Jogo> lista,
                             JTextField gA, JTextField gB, JTextField pA, JTextField pB,
                             JTextField rA, JTextField rB, JTextField cA, JTextField cB,
                             JTextField fA, JTextField fB, JComboBox<String> motm,
                             JButton sub, JButton edit, JButton canc, JTable tabEventos,
-                            PainelCalendario painelCalendarioRef) {
+                            PainelCalendario painelCalendarioRef, JButton btnApagar) {
 
         // 1. Atribuição dos atributos e serviços base
         this.controller = controller;
         this.listaJogos = lista;
         this.painelCalendarioRef = painelCalendarioRef;
+        this.btnApagarEvento = btnApagar;
 
         // 2. Componentes de texto das estatísticas
         this.txtGolosA = gA;   this.txtGolosB = gB;
@@ -50,6 +52,8 @@ public class PainelResultados extends JPanel {
         this.btnEditar = edit;
         this.btnCancelar = canc;
         this.btnAdicionarEvento = null; // Capturado dinamicamente via SwingUtilities no configurarEventos()
+
+        this.btnApagarEvento.addActionListener(e -> apagarEventoSelecionado());
 
         // 4. Inicialização e acoplamento do modelo seguro da Tabela de Eventos
         this.tabelaEventos = tabEventos;
@@ -211,22 +215,72 @@ public class PainelResultados extends JPanel {
                             return;
                         }
 
-                        String jogadorSelecionado = (String) JOptionPane.showInputDialog(this,
-                                "Selecione o Jogador envolvido:", "Jogador",
-                                JOptionPane.QUESTION_MESSAGE, null,
-                                jogadoresDisponiveis.toArray(new String[0]),
-                                jogadoresDisponiveis.get(0));
-                        if (jogadorSelecionado == null) return;
+                        if (tipoSelecionado.equals("Substituição")) {
+                            // 1. Jogador que SAI
+                            String sai = (String) JOptionPane.showInputDialog(this, "Selecione o jogador que SAI:", "Substituição (SAI)",
+                                    JOptionPane.QUESTION_MESSAGE, null, jogadoresDisponiveis.toArray(), null);
 
-                        modeloTabelaEventos.addRow(new Object[]{
-                                minuto + "'",
-                                tipoSelecionado,
-                                jogadorSelecionado
-                        });
+                            // 2. Jogador que ENTRA
+                            String entra = (String) JOptionPane.showInputDialog(this, "Selecione o jogador que ENTRA:", "Substituição (ENTRA)",
+                                    JOptionPane.QUESTION_MESSAGE, null, jogadoresDisponiveis.toArray(), null);
+
+                            if (sai != null && entra != null) {
+                                if (sai.equals(entra)) {
+                                    JOptionPane.showMessageDialog(this, "O jogador que sai não pode ser o mesmo que entra!");
+                                } else {
+                                    modeloTabelaEventos.addRow(new Object[]{minuto + "'", "Substituição", sai + " > " + entra});
+                                }
+                            }
+                        } else {
+                            // AQUI É O TEU CÓDIGO ANTIGO PARA GOLOS/CARTÕES
+                            String jogadorSelecionado = (String) JOptionPane.showInputDialog(this,
+                                    "Selecione o Jogador envolvido:", "Jogador",
+                                    JOptionPane.QUESTION_MESSAGE, null,
+                                    jogadoresDisponiveis.toArray(new String[0]),
+                                    jogadoresDisponiveis.get(0));
+
+                            if (jogadorSelecionado != null) {
+                                modeloTabelaEventos.addRow(new Object[]{minuto + "'", tipoSelecionado, jogadorSelecionado});
+                            }
+                        }
                     });
                 }
+
+                JButton btnApagar = janela.btnApagarEvento;
+
+                if (btnApagar != null) {
+                    // Limpa listeners antigos para não duplicar
+                    for (java.awt.event.ActionListener al : btnApagar.getActionListeners()) {
+                        btnApagar.removeActionListener(al);
+                    }
+                    // Adiciona a nova lógica
+                    btnApagar.addActionListener(e -> apagarEventoSelecionado());
+                }
+
             }
         });
+    }
+
+    // Adiciona este método dentro da classe PainelResultados
+    private void apagarEventoSelecionado() {
+        int linhaSelecionada = tabelaEventos.getSelectedRow();
+
+        if (linhaSelecionada == -1) {
+            JOptionPane.showMessageDialog(this, "Por favor, selecione uma linha na tabela para apagar.");
+            return;
+        }
+
+        // Converter o índice da vista para o índice do modelo (importante se tiveres sorting na tabela)
+        int modeloIndex = tabelaEventos.convertRowIndexToModel(linhaSelecionada);
+
+        int resposta = JOptionPane.showConfirmDialog(this,
+                "Tem a certeza que deseja apagar este evento?",
+                "Confirmar Exclusão",
+                JOptionPane.YES_NO_OPTION);
+
+        if (resposta == JOptionPane.YES_OPTION) {
+            modeloTabelaEventos.removeRow(modeloIndex);
+        }
     }
 
     private void submeterDados() {
@@ -234,6 +288,19 @@ public class PainelResultados extends JPanel {
         if (jogo == null) return;
 
         try {
+            int pA = Integer.parseInt(txtPosseA.getText());
+            int pB = Integer.parseInt(txtPosseB.getText());
+
+            // Validação simples:
+            if ((pA + pB) != 100) {
+                JOptionPane.showMessageDialog(this, "Erro: A soma da posse de bola tem de ser exatamente 100%.");
+                return; // Interrompe o processo e não guarda nada
+            }
+
+            // Se passar na validação, guarda:
+            jogo.setPosseA(pA);
+            jogo.setPosseB(pB);
+
             // 1. Gravar golos e MOTM
             jogo.definirResultado(Integer.parseInt(txtGolosA.getText()), Integer.parseInt(txtGolosB.getText()));
             jogo.setMotm((String) cbMOTM.getSelectedItem());
