@@ -5,6 +5,8 @@ import pt.ipleiria.estg.dei.ei.esoft.model.Estadia;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogador;
 import pt.ipleiria.estg.dei.ei.esoft.model.Jogo;
 import pt.ipleiria.estg.dei.ei.esoft.model.Selecao;
+import pt.ipleiria.estg.dei.ei.esoft.model.Bilhete;
+import pt.ipleiria.estg.dei.ei.esoft.model.Estadio;
 
 import java.io.EOFException;
 import java.io.File;
@@ -23,11 +25,15 @@ public class MundialController {
     private List<Jogo> calendarioJogos;
     private List<Arbitro> arbitrosDisponiveis;
     private List<Selecao> selecoesParticipantes;
+    private List<Estadio> estadios;
+    private List<Bilhete> bilhetesEmitidos;
 
     public MundialController() {
         this.calendarioJogos = new ArrayList<>();
         this.arbitrosDisponiveis = new ArrayList<>();
         this.selecoesParticipantes = new ArrayList<>();
+        this.estadios = new ArrayList<>();
+        this.bilhetesEmitidos = new ArrayList<>();
     }
 
     // =========================
@@ -160,21 +166,18 @@ public class MundialController {
     public List<Jogador> getTopMelhoresMarcadores() {
         List<Jogador> todosOsJogadores = new ArrayList<>();
 
-        // Agrupar todos os jogadores de todas as seleções numa lista única
         for (Selecao s : selecoesParticipantes) {
             if (s.getJogadores() != null) {
                 todosOsJogadores.addAll(s.getJogadores());
             }
         }
 
-        // Ordenar por ordem decrescente de golos e colher os 5 melhores
         return todosOsJogadores.stream()
                 .filter(j -> j.getGolos() > 0)
                 .sorted((j1, j2) -> Integer.compare(j2.getGolos(), j1.getGolos()))
                 .limit(5)
                 .collect(java.util.stream.Collectors.toList());
     }
-
 
     public List<String[]> getMelhoresMarcadoresPorEventos() {
         return obterRankingEventos(true);
@@ -192,7 +195,6 @@ public class MundialController {
                 continue;
             }
 
-            // Fonte principal: eventos guardados na aba Resultados.
             if (jogo.getEventosDoJogo() != null) {
                 for (String[] evento : jogo.getEventosDoJogo()) {
                     if (evento == null || evento.length < 3) {
@@ -218,7 +220,6 @@ public class MundialController {
                 }
             }
 
-            // Compatibilidade com a estrutura antiga do Jogo, caso algum dia seja usada.
             if (contarGolos && jogo.getAutoresGolos() != null) {
                 for (String marcador : jogo.getAutoresGolos()) {
                     adicionarAoRanking(contagem, marcador);
@@ -263,76 +264,95 @@ public class MundialController {
     }
 
     private void adicionarAoRanking(Map<String, Integer> contagem, String jogador) {
-        if (jogador == null) {
-            return;
-        }
-
+        if (jogador == null) return;
         jogador = jogador.trim();
-
-        if (jogador.isBlank() || jogador.equalsIgnoreCase("Sem assistência")) {
-            return;
-        }
-
+        if (jogador.isBlank() || jogador.equalsIgnoreCase("Sem assistência")) return;
         contagem.put(jogador, contagem.getOrDefault(jogador, 0) + 1);
     }
 
     private String extrairMarcador(String detalhes) {
-        if (detalhes == null || detalhes.isBlank()) {
-            return "";
-        }
-
+        if (detalhes == null || detalhes.isBlank()) return "";
         int indice = detalhes.indexOf("| Assist:");
-
-        if (indice == -1) {
-            return detalhes.trim();
-        }
-
+        if (indice == -1) return detalhes.trim();
         return detalhes.substring(0, indice).trim();
     }
 
     private String extrairAssistente(String detalhes) {
-        if (detalhes == null || detalhes.isBlank()) {
-            return "";
-        }
-
+        if (detalhes == null || detalhes.isBlank()) return "";
         String marcador = "| Assist:";
         int indice = detalhes.indexOf(marcador);
-
-        if (indice == -1) {
-            return "";
-        }
-
+        if (indice == -1) return "";
         return detalhes.substring(indice + marcador.length()).trim();
     }
 
     private String extrairNomeJogador(String jogadorCompleto) {
-        if (jogadorCompleto == null) {
-            return "";
-        }
-
+        if (jogadorCompleto == null) return "";
         int indice = jogadorCompleto.lastIndexOf(" (");
-
-        if (indice == -1) {
-            return jogadorCompleto.trim();
-        }
-
+        if (indice == -1) return jogadorCompleto.trim();
         return jogadorCompleto.substring(0, indice).trim();
     }
 
     private String extrairSelecaoJogador(String jogadorCompleto) {
-        if (jogadorCompleto == null) {
-            return "";
-        }
-
+        if (jogadorCompleto == null) return "";
         int inicio = jogadorCompleto.lastIndexOf("(");
         int fim = jogadorCompleto.lastIndexOf(")");
-
-        if (inicio == -1 || fim == -1 || fim <= inicio) {
-            return "";
-        }
-
+        if (inicio == -1 || fim == -1 || fim <= inicio) return "";
         return jogadorCompleto.substring(inicio + 1, fim).trim();
     }
+
+    // =========================
+    // Gestão de Bilhetes e Estádios
+    // =========================
+
+    public List<Estadio> getEstadios() {
+        return new ArrayList<>(estadios);
+    }
+
+    public List<Bilhete> getBilhetesEmitidos() {
+        return new ArrayList<>(bilhetesEmitidos);
+    }
+
+    public List<Bilhete> getBilhetesPorJogo(Jogo jogo) {
+        List<Bilhete> filtrados = new ArrayList<>();
+        for (Bilhete b : bilhetesEmitidos) {
+            if (b.getJogo().equals(jogo)) {
+                filtrados.add(b);
+            }
+        }
+        return filtrados;
+    }
+
+    public void emitirBilhete(Jogo jogo, String setor, int quantidade) {
+        if (jogo == null) {
+            throw new IllegalArgumentException("É necessário selecionar um jogo.");
+        }
+        if (setor == null || setor.isBlank()) {
+            throw new IllegalArgumentException("É necessário selecionar um setor válido.");
+        }
+        if (quantidade <= 0) {
+            throw new IllegalArgumentException("A quantidade de bilhetes tem de ser maior que zero.");
+        }
+
+        int capacidadeMaximaSetor = 10000;
+        int bilhetesJaVendidosNesteSetor = 0;
+
+        for (Bilhete b : bilhetesEmitidos) {
+            if (b.getJogo().equals(jogo) && b.getSetor().equalsIgnoreCase(setor)) {
+                bilhetesJaVendidosNesteSetor++;
+            }
+        }
+
+        if ((bilhetesJaVendidosNesteSetor + quantidade) > capacidadeMaximaSetor) {
+            int disponiveis = capacidadeMaximaSetor - bilhetesJaVendidosNesteSetor;
+            throw new IllegalArgumentException("Capacidade excedida para o " + setor + ". Apenas restam " + disponiveis + " lugares disponíveis.");
+        }
+
+        for (int i = 0; i < quantidade; i++) {
+            Bilhete novoBilhete = new Bilhete(jogo, setor);
+            this.bilhetesEmitidos.add(novoBilhete);
+        }
+    }
+
 
     // =========================
     // Gestão de Calendário / Arbitragem
@@ -431,6 +451,7 @@ public class MundialController {
             oos.writeObject(this.calendarioJogos);
             oos.writeObject(this.arbitrosDisponiveis);
             oos.writeObject(this.selecoesParticipantes);
+            oos.writeObject(this.bilhetesEmitidos); // Guarda os bilhetes!
             System.out.println("Ficheiro dados_mundial.dat guardado fisicamente com sucesso!");
         } catch (IOException e) {
             System.out.println("ERRO CRÍTICO AO GRAVAR FICHEIRO: " + e.getMessage());
@@ -464,8 +485,15 @@ public class MundialController {
                     this.selecoesParticipantes.clear();
                     this.selecoesParticipantes.addAll(selecoesCarregadas);
                 }
+
+                // Carrega os bilhetes do ficheiro
+                List<Bilhete> bilhetesCarregados = (List<Bilhete>) ois.readObject();
+                if (bilhetesCarregados != null) {
+                    this.bilhetesEmitidos.clear();
+                    this.bilhetesEmitidos.addAll(bilhetesCarregados);
+                }
             } catch (EOFException ignored) {
-                // Compatibilidade com ficheiros antigos que só tinham jogos e árbitros.
+                // Compatibilidade com ficheiros antigos.
             }
 
         } catch (Exception e) {
@@ -1973,7 +2001,6 @@ public class MundialController {
     }
 
     public void inicializarArbitros(MundialController controller) {
-        // --- 52 ÁRBITROS PRINCIPAIS (Referees) ---
         controller.adicionarArbitro(new Arbitro("Abdulrahman Al-Jassim", "Catarina", "Principal"));
         controller.adicionarArbitro(new Arbitro("Khalid Al-Turais", "Saudita", "Principal"));
         controller.adicionarArbitro(new Arbitro("Yusuke Araki", "Japonesa", "Principal"));
@@ -2150,7 +2177,7 @@ public class MundialController {
         controller.adicionarArbitro(new Arbitro("Armando Villarreal", "Americana", "VAR"));
     }
 
-    public void inicializarJogos(MundialController controller){
+    public void inicializarJogos(MundialController controller) {
         controller.adicionarJogo(new Jogo("Quinta-Feira 11 Junho 2026", "16:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio da Cidade do México", "Cidade do México", "México", "MEX", "Mexicana", "África do Sul", "RSA", "Sul-africana"));
         controller.adicionarJogo(new Jogo("Sexta-Feira 12 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo A", "Estádio de Guadalajara", "Guadalajara", "Coreia do Sul", "KOR", "Sul-coreana", "Chéquia", "CZE", "Checa"));
         controller.adicionarJogo(new Jogo("Sexta-Feira 12 Junho 2026", "15:00", "GMT+0", "Primeira fase", "Grupo B", "Estádio de Toronto", "Toronto", "Canadá", "CAN", "Canadiana", "Bósnia e Herzegovina", "BIH", "Bósnia"));
@@ -2215,15 +2242,14 @@ public class MundialController {
         controller.adicionarJogo(new Jogo("Sexta-Feira 26 Junho 2026", "20:00", "GMT+0", "Primeira fase", "Grupo I", "Estádio de Toronto", "Toronto", "Senegal", "SEN", "Senegalesa", "Iraque", "IRQ", "Iraquiana"));
         controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Houston", "Houston", "Cabo Verde", "CPV", "Cabo-verdiana", "Arábia Saudita", "KSA", "Saudita"));
         controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "01:00", "GMT+0", "Primeira fase", "Grupo H", "Estádio de Guadalajara", "Guadalajara", "Uruguai", "URU", "Uruguaia", "Espanha", "ESP", "Espanhola"));
-        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", "Estádio de Seattle", "Seattle", "Egito", "EGY", "Egípcia", "RI do Irã", "IRN", "Iraniana"));
+        controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", "Estádio de Seattle", "Seattle", "Egito", "EGY", "Egípcia", "Irão", "IRN", "Iraniana"));
         controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "04:00", "GMT+0", "Primeira fase", "Grupo G", "BC Place de Vancouver", "Vancouver", "Nova Zelândia", "NZL", "Neo-zelandesa", "Bélgica", "BEL", "Belga"));
         controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Nova York/Nova Jersey", "Nova Jersey", "Panamá", "PAN", "Panamiana", "Inglaterra", "ENG", "Inglesa"));
         controller.adicionarJogo(new Jogo("Sábado 27 Junho 2026", "22:00", "GMT+0", "Primeira fase", "Grupo L", "Estádio de Filadélfia", "Filadélfia", "Croácia", "CRO", "Croata", "Gana", "GHA", "Ganesa"));
         controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Miami", "Miami", "Colômbia", "COL", "Colombiana", "Portugal", "PT", "Portuguesa"));
-        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Atlanta", "Atlanta", "RD do Congo", "COD", "Congolesa", "Uzbequistão", "UZB", "Usbeque"));
+        controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "00:30", "GMT+0", "Primeira fase", "Grupo K", "Estádio de Atlanta", "Atlanta", "RD Congo", "COD", "Congolesa", "Uzbequistão", "UZB", "Usbeque"));
         controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio de Kansas City", "Kansas City", "Argélia", "ALG", "Argelina", "Áustria", "AUT", "Austríaca"));
         controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "03:00", "GMT+0", "Primeira fase", "Grupo J", "Estádio de Dallas", "Dallas", "Jordânia", "JOR", "Jordana", "Argentina", "ARG", "Argentina"));
-
         // Segundas de final
         controller.adicionarJogo(new Jogo("Domingo 28 Junho 2026", "20:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Los Angeles", "Los Angeles", "2A", "2A", "Apurada", "2B", "2B", "Apurada"));
         controller.adicionarJogo(new Jogo("Segunda-Feira 29 Junho 2026", "18:00", "GMT+0", "Segundas de final", "Dezasseis-avos", "Estádio de Houston", "Houston", "1C", "1C", "Apurada", "2F", "2F", "Apurada"));

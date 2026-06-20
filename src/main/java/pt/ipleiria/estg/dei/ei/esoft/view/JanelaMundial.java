@@ -93,6 +93,18 @@ public class JanelaMundial extends JFrame {
     private JButton btnVerFaseFinal;
     private JPanel pnlMelhoresMarcadores;
     private JPanel pnlLideresAssistencias;
+    private JPanel abaBilhetes;
+    private JList list1;
+    private JSpinner spinner1;
+    private JComboBox comboBox1;
+    private JComboBox comboBox2;
+    private JButton btnGerarBilhetes;
+    private JTable table1;
+    private JPanel painelBilhetesEmitidos;
+    private JPanel painelFormularioBilhetes;
+    private JPanel painelJogoEstadio;
+    private JLabel lblEstadio;
+    private JLabel lblInfos;
 
     private MundialController controller;
     private boolean acabouDeAlocarComSucesso = false;
@@ -137,6 +149,17 @@ public class JanelaMundial extends JFrame {
                 abaCalendarioLimpa,
                 btnApagarEvento
         );
+        new PainelBilhetes(
+                controller,
+                list1,
+                spinner1,
+                comboBox1, // Setor
+                comboBox2, // Lugar
+                btnGerarBilhetes,
+                table1,
+                lblEstadio,
+                lblInfos
+        );
 
         configurarAbaClassificacao();
 
@@ -147,6 +170,7 @@ public class JanelaMundial extends JFrame {
         abasPrincipais.addTab("Equipas", abaEquipasLimpa);
         abasPrincipais.addTab("Resultados", abaResultados);
         abasPrincipais.addTab("Classificação", abaClassificacao);
+        abasPrincipais.addTab("Bilhetes", abaBilhetes);
 
         abasPrincipais.addChangeListener(e -> {
             if (abasPrincipais.getSelectedComponent() == abaClassificacao) {
